@@ -687,7 +687,51 @@ function getBestMimeType() {
   return types.find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
 }
 
-async function renderVideo(imgEls, gradeId, platform, durationSec, mode, onProgress) {
+// Resize image for AI API — keeps payload small and fast
+async function resizeForAI(imgEl, maxW=1024, maxH=576) {
+  const ratio = Math.min(maxW/imgEl.naturalWidth, maxH/imgEl.naturalHeight, 1);
+  const c = document.createElement('canvas');
+  c.width  = Math.round(imgEl.naturalWidth  * ratio);
+  c.height = Math.round(imgEl.naturalHeight * ratio);
+  c.getContext('2d').drawImage(imgEl, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.82);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x,y,w,h,r); return; }
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+function analyzeProjectType(imgEls) {
+  const samples = Math.min(3, imgEls.length);
+  let tR=0, tG=0, tB=0;
+  for (let i=0; i<samples; i++) {
+    const img = imgEls[i];
+    const tc = document.createElement('canvas'); tc.width=60; tc.height=45;
+    const tctx = tc.getContext('2d'); tctx.drawImage(img,0,0,60,45);
+    const d = tctx.getImageData(0,0,60,45).data;
+    for (let p=0;p<d.length;p+=4){ tR+=d[p]; tG+=d[p+1]; tB+=d[p+2]; }
+  }
+  const px=samples*60*45, r=tR/px, g=tG/px, b=tB/px;
+  const brightness=(r+g+b)/3, warmth=r-b;
+  if (warmth>28 && brightness>90)  return {type:'RESIDENTIAL BUILD',    phases:['SITE PREP','FOUNDATION','FRAMING','ROUGH-IN','DRYWALL','COMPLETION']};
+  if (warmth<8  && brightness<115) return {type:'COMMERCIAL PROJECT',   phases:['SITE PREP','FOUNDATION','STRUCTURAL','CONCRETE POUR','MECHANICAL','FINISHING']};
+  if (brightness<75)               return {type:'EXCAVATION PROJECT',   phases:['CLEARING','EXCAVATION','GRADING','DRAINAGE','UTILITY WORK','COMPLETION']};
+  return                                  {type:'CONSTRUCTION PROJECT', phases:['SITE PREP','FOUNDATION','FRAMING','ROUGH-IN','FINISHING','COMPLETION']};
+}
+
+function getPhaseLabel(imgIdx, totalImgs, projectInfo) {
+  const phases = projectInfo.phases;
+  const idx = Math.min(Math.floor((imgIdx/totalImgs)*phases.length), phases.length-1);
+  const day = Math.round((imgIdx/Math.max(totalImgs-1,1))*180)+1;
+  return { phase: phases[idx], day };
+}
+
+async function renderVideo(imgEls, gradeId, platform, durationSec, mode, onProgress, projectInfo) {
   return new Promise((resolve, reject) => {
     const scale = 0.75;
     const pw = Math.round(Math.min(platform.w, 1080)*scale);
@@ -720,26 +764,81 @@ async function renderVideo(imgEls, gradeId, platform, durationSec, mode, onProgr
       if (imgIdx >= imgEls.length) { setTimeout(()=>rec.stop(), 500); return; }
       const img = imgEls[imgIdx];
       const t = (frame % framesPerImg) / framesPerImg;
-      const eff = mode==='timelapse' ? 'zoom-in' : effects[imgIdx%effects.length];
+      const frameInImg = frame % framesPerImg;
+      const eff = mode==='timelapse' ? (imgIdx%2===0?'zoom-in':'zoom-out') : effects[imgIdx%effects.length];
       const {dw,dh,dx,dy} = coverFit(img.naturalWidth, img.naturalHeight, pw, ph);
 
       let extraScale=1, ox=0, oy=0;
-      if (eff==='zoom-in')   extraScale = 1.06+t*0.12;
-      else if (eff==='zoom-out') extraScale = 1.18-t*0.12;
+      if (eff==='zoom-in')   extraScale = 1.04+t*0.08;
+      else if (eff==='zoom-out') extraScale = 1.12-t*0.08;
       else if (eff==='pan-right') { extraScale=1.1; ox=(t-0.5)*pw*0.07; }
       else { extraScale=1.1; ox=-(t-0.5)*pw*0.07; }
+
+      // Subtle brightness flicker simulates time-of-day changes
+      const flicker = mode==='timelapse' ? (0.92+Math.sin(frame*0.41)*0.08) : 1;
 
       ctx.fillStyle='#080909'; ctx.fillRect(0,0,pw,ph);
       ctx.save();
       ctx.translate(pw/2+ox, ph/2+oy);
       ctx.scale(extraScale, extraScale);
       ctx.translate(-pw/2, -ph/2);
+      ctx.globalAlpha = flicker;
       ctx.drawImage(img,dx,dy,dw,dh);
+      ctx.globalAlpha = 1;
       ctx.restore();
 
       if (gradeId) { const id=ctx.getImageData(0,0,pw,ph); applyGrade(id.data,gradeId); ctx.putImageData(id,0,0); }
 
-      // Fade between clips
+      // ── Timelapse HUD overlays ─────────────────────────────
+      if (mode==='timelapse' && projectInfo) {
+        const lbl = getPhaseLabel(imgIdx, imgEls.length, projectInfo);
+        const fs = Math.max(13, Math.round(pw*0.026));
+
+        // Day counter pill — top right
+        const dayStr = `DAY ${lbl.day}`;
+        ctx.save();
+        ctx.font = `700 ${fs}px Inter, Arial, sans-serif`;
+        const dtw = ctx.measureText(dayStr).width;
+        const dp=10, dW=dtw+dp*2+8, dH=fs+14, dX=pw-dW-14, dY=14;
+        ctx.fillStyle='rgba(0,0,0,0.62)';
+        roundRect(ctx,dX,dY,dW,dH,5); ctx.fill();
+        ctx.fillStyle='#F59E0B'; ctx.textAlign='left';
+        ctx.fillText(dayStr, dX+dp, dY+dH-6);
+        ctx.restore();
+
+        // Project type badge — top left, first image only
+        if (imgIdx===0 && frameInImg < framesPerImg*0.65) {
+          ctx.save();
+          ctx.font = `700 ${Math.round(fs*0.82)}px Inter, Arial, sans-serif`;
+          const ptw = ctx.measureText(projectInfo.type).width+24;
+          ctx.fillStyle='rgba(245,158,11,0.95)';
+          roundRect(ctx,14,14,ptw,fs+12,5); ctx.fill();
+          ctx.fillStyle='#000'; ctx.textAlign='left';
+          ctx.fillText(projectInfo.type, 26, 14+fs+2);
+          ctx.restore();
+        }
+
+        // Phase label — lower third, fades in/out
+        if (frameInImg < framesPerImg*0.55) {
+          const pAlpha = Math.min(1, frameInImg/5) * (frameInImg < framesPerImg*0.42 ? 1 : Math.max(0,(framesPerImg*0.55-frameInImg)/(framesPerImg*0.13)));
+          ctx.save();
+          const bh=Math.round(ph*0.09), by=ph-bh;
+          ctx.fillStyle=`rgba(0,0,0,${0.68*pAlpha})`; ctx.fillRect(0,by,pw,bh);
+          ctx.fillStyle=`rgba(245,158,11,${pAlpha})`; ctx.fillRect(0,by,5,bh);
+          ctx.font=`700 ${Math.round(fs*1.05)}px Inter, Arial, sans-serif`;
+          ctx.fillStyle=`rgba(255,255,255,${pAlpha})`; ctx.textAlign='left';
+          ctx.fillText(lbl.phase, 20, by+bh*0.68);
+          ctx.restore();
+        }
+
+        // Flash cut at start of each new image
+        if (frameInImg < 5) {
+          ctx.fillStyle=`rgba(255,255,255,${(1-frameInImg/5)*0.65})`;
+          ctx.fillRect(0,0,pw,ph);
+        }
+      }
+
+      // Fade between clips for sizzle/presentation
       if (mode!=='timelapse') {
         const fadeAt = 0.84;
         if (t > fadeAt) {
@@ -813,18 +912,92 @@ function App() {
       await sleep(700);
 
       if (selType.id==='timelapse' || selType.id==='sizzle' || selType.id==='presentation') {
-        setPhase(selType.id==='timelapse' ? 'Building your timelapse...' : selType.id==='sizzle' ? 'Applying cinematic effects...' : 'Assembling your presentation...');
-        setProgress(8);
         const mode = selType.id==='timelapse' ? 'timelapse' : 'sizzle';
-        const dur = selType.id==='presentation' ? Math.max(12, imgEls.length*3) : duration;
-        const blob = await renderVideo(imgEls, grade, platform, dur, mode, p=>{
-          setProgress(8 + p*82);
-          if (p < 0.5) setPhase('Rendering frames with color grade...');
-          else setPhase('Encoding video for social media...');
-        });
-        setProgress(96); setPhase('Finalizing...');
-        await sleep(600);
-        res = { type:'video', blob, url:URL.createObjectURL(blob), filename:`buildcast_${selType.id}.webm` };
+        let projectInfo = null;
+
+        // ── AI Timelapse path ──────────────────────────────────
+        if (selType.id==='timelapse') {
+          setPhase('Scanning photos — identifying project type...');
+          await sleep(400);
+          projectInfo = analyzeProjectType(imgEls);
+          setPhase(`${projectInfo.type} detected — sending to AI...`);
+          await sleep(400);
+
+          try {
+            // Resize all photos for API
+            setPhase('Preparing photos for AI generation...');
+            const resized = await Promise.all(imgEls.map(img => resizeForAI(img)));
+            setProgress(6);
+
+            // Start all predictions in parallel
+            const predIds = [];
+            for (let i=0; i<resized.length; i++) {
+              setPhase(`Queuing AI clip ${i+1} of ${resized.length}...`);
+              const r = await fetch('/api/timelapse/start', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ image: resized[i] })
+              });
+              const d = await r.json();
+              if (d.error) throw new Error(d.error);
+              predIds.push(d.id);
+              setProgress(6 + ((i+1)/resized.length)*12);
+            }
+
+            // Poll until all clips complete
+            const videoUrls = new Array(predIds.length).fill(null);
+            const done = new Set();
+            setPhase(`AI generating ${predIds.length} timelapse clip${predIds.length>1?'s':''}...`);
+
+            while (done.size < predIds.length) {
+              await sleep(3500);
+              for (let i=0; i<predIds.length; i++) {
+                if (done.has(i)) continue;
+                const r = await fetch(`/api/timelapse/status?id=${predIds[i]}`);
+                const d = await r.json();
+                if (d.status==='succeeded' && d.url) {
+                  videoUrls[i] = d.url;
+                  done.add(i);
+                  setProgress(18 + (done.size/predIds.length)*76);
+                  setPhase(`Clip ${done.size} of ${predIds.length} ready${done.size<predIds.length?' — AI still working...':' — finishing up!'}`);
+                } else if (d.status==='failed') {
+                  throw new Error('AI generation failed: ' + (d.error||'unknown'));
+                }
+              }
+            }
+
+            setProgress(100);
+            await sleep(400);
+            res = { type:'ai-timelapse', urls:videoUrls, projectInfo, filename:'buildcast_timelapse' };
+
+          } catch(aiErr) {
+            // Graceful fallback to canvas timelapse
+            console.warn('AI timelapse failed, falling back to canvas:', aiErr.message);
+            setPhase('Falling back to canvas render...');
+            await sleep(400);
+            setProgress(8);
+            const dur = duration;
+            const blob = await renderVideo(imgEls, grade, platform, dur, 'timelapse', p=>{
+              setProgress(8+p*82);
+              if (p<0.5) setPhase('Rendering frames...'); else setPhase('Encoding video...');
+            }, projectInfo);
+            setProgress(100);
+            await sleep(400);
+            res = { type:'video', blob, url:URL.createObjectURL(blob), filename:'buildcast_timelapse.webm' };
+          }
+
+        } else {
+          // ── Sizzle / Presentation (canvas path) ──────────────
+          setPhase(selType.id==='sizzle' ? 'Applying cinematic effects...' : 'Assembling your presentation...');
+          setProgress(8);
+          const dur = selType.id==='presentation' ? Math.max(12, imgEls.length*3) : duration;
+          const blob = await renderVideo(imgEls, grade, platform, dur, mode, p=>{
+            setProgress(8+p*82);
+            if (p<0.5) setPhase('Rendering frames with color grade...'); else setPhase('Encoding video...');
+          }, null);
+          setProgress(96); setPhase('Finalizing...');
+          await sleep(600);
+          res = { type:'video', blob, url:URL.createObjectURL(blob), filename:`buildcast_${selType.id}.webm` };
+        } // end sizzle/presentation
 
       } else {
         const urls = [];
@@ -1216,10 +1389,51 @@ function ProcessingScreen({ progress, phase, type }) {
 }
 
 /* ── RESULT ──────────────────────────────────── */
+function AITimelapsePlayer({ result }) {
+  const [idx, setIdx] = React.useState(0);
+  const vidRef = React.useRef();
+  const urls = result.urls;
+  const lbl = result.projectInfo ? result.projectInfo.phases[
+    Math.min(Math.floor((idx/urls.length)*result.projectInfo.phases.length), result.projectInfo.phases.length-1)
+  ] : '';
+
+  const advance = () => {
+    if (idx < urls.length-1) { setIdx(i=>i+1); }
+    else { setIdx(0); }
+  };
+
+  React.useEffect(() => {
+    if (vidRef.current) { vidRef.current.load(); vidRef.current.play().catch(()=>{}); }
+  }, [idx]);
+
+  return (
+    <div style={{position:'relative',background:'#000',borderRadius:12,overflow:'hidden'}}>
+      <video ref={vidRef} src={urls[idx]} style={{width:'100%',display:'block',maxHeight:520,objectFit:'contain'}}
+        onEnded={advance} autoPlay muted playsInline />
+      {/* Phase label overlay */}
+      <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'10px 14px',
+        background:'linear-gradient(transparent,rgba(0,0,0,0.75))',display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
+        <div>
+          <div style={{fontSize:11,color:'#F59E0B',fontWeight:700,letterSpacing:2,marginBottom:3}}>{result.projectInfo?.type}</div>
+          <div style={{fontSize:15,color:'#fff',fontWeight:700,letterSpacing:1}}>{lbl}</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          {urls.map((_,i)=>(
+            <button key={i} onClick={()=>setIdx(i)}
+              style={{width:8,height:8,borderRadius:'50%',border:'none',cursor:'pointer',
+                background:i===idx?'#F59E0B':'rgba(255,255,255,0.35)',padding:0}} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ResultScreen({ result, type, platform, onNew }) {
   const [activeIdx, setActiveIdx] = useState(0);
   if (!result) return null;
 
+  const isAITimelapse = result.type==='ai-timelapse';
   const isVideo = result.type==='video';
   const tipMap = {
     ig_reel: "Add a trending audio track in Instagram before posting — Reels with popular audio get 4–6× more reach.",
@@ -1245,25 +1459,27 @@ function ResultScreen({ result, type, platform, onNew }) {
       <div className="result-layout">
         <div>
           <div className="result-preview-card">
-            {isVideo
-              ? <video controls autoPlay muted loop src={result.url} style={{width:'100%',display:'block',maxHeight:520,objectFit:'contain',background:'#000'}} />
-              : <>
-                  <img src={result.urls[activeIdx]} alt="" />
-                  {result.urls.length>1 &&
-                    <div className="photo-carousel">
-                      {result.urls.map((url,i)=>(
-                        <img key={i} src={url} alt="" className={activeIdx===i?'active':''} onClick={()=>setActiveIdx(i)} />
-                      ))}
-                    </div>
-                  }
-                </>
+            {isAITimelapse
+              ? <AITimelapsePlayer result={result} />
+              : isVideo
+                ? <video controls autoPlay muted loop src={result.url} style={{width:'100%',display:'block',maxHeight:520,objectFit:'contain',background:'#000'}} />
+                : <>
+                    <img src={result.urls[activeIdx]} alt="" />
+                    {result.urls.length>1 &&
+                      <div className="photo-carousel">
+                        {result.urls.map((url,i)=>(
+                          <img key={i} src={url} alt="" className={activeIdx===i?'active':''} onClick={()=>setActiveIdx(i)} />
+                        ))}
+                      </div>
+                    }
+                  </>
             }
           </div>
 
           <div className="result-meta-row">
             {[
               ['Platform', platform?.name],
-              ['Format', isVideo ? 'Video · WebM' : `${result.urls?.length} Photos`],
+              ['Format', isAITimelapse ? `AI Video · ${result.urls?.length} clips` : isVideo ? 'Video · WebM' : `${result.urls?.length} Photos`],
               ['Aspect', platform?.aspect],
             ].map(([k,v])=>(
               <div key={k} className="result-meta-pill">
@@ -1278,7 +1494,25 @@ function ResultScreen({ result, type, platform, onNew }) {
           <div className="dl-panel">
             <div className="dl-title">DOWNLOAD</div>
 
-            {isVideo ? (
+            {isAITimelapse ? (
+              <>
+                <div style={{fontSize:12,color:'var(--text-2)',marginBottom:12,lineHeight:1.5}}>
+                  Your AI clips are hosted links — tap each to open and save directly to your phone or camera roll.
+                </div>
+                {result.urls.map((url,i)=>(
+                  <a key={i} className="dl-btn" href={url} target="_blank" rel="noreferrer">
+                    <div className="dl-btn-left">
+                      <span className="dl-icon">🎬</span>
+                      <div>
+                        <div className="dl-name">AI Clip {i+1} — {result.projectInfo?.phases[Math.min(Math.floor((i/result.urls.length)*result.projectInfo.phases.length),result.projectInfo.phases.length-1)]}</div>
+                        <div className="dl-size">MP4 · AI Generated · Tap to open</div>
+                      </div>
+                    </div>
+                    <span className="dl-arrow">↗</span>
+                  </a>
+                ))}
+              </>
+            ) : isVideo ? (
               <a className="dl-btn" href={result.url} download={result.filename}>
                 <div className="dl-btn-left">
                   <span className="dl-icon">📥</span>
