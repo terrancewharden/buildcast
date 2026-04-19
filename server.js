@@ -3,9 +3,44 @@ const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
 
-const PORT          = process.env.PORT || 3000;
-const REPLICATE_KEY = process.env.REPLICATE_API_KEY;
-const FILE          = path.join(__dirname, 'buildcast.html');
+const PORT            = process.env.PORT || 3000;
+const REPLICATE_KEY   = process.env.REPLICATE_API_KEY;
+const STRIPE_SECRET   = process.env.STRIPE_SECRET_KEY;
+const FILE            = path.join(__dirname, 'buildcast.html');
+
+const STRIPE_PRICES = {
+  starter: 'price_1TNxQNCeomIgjT0aBnT8Fsf7',  // $10/mo
+  pro:     'price_1TNxUQCeomIgjT0ahzyJb23n',   // $30/mo
+  studio:  'price_1TNxVmCeomIgjT0atBzsbDTn'    // $50/mo
+};
+
+/* ── Replicate helpers ───────────────────────────────────────── */
+/* ── Stripe helper ───────────────────────────────────────────── */
+function stripePost(endpoint, params) {
+  return new Promise((resolve, reject) => {
+    const data = new URLSearchParams(params).toString();
+    const req = https.request({
+      hostname: 'api.stripe.com',
+      path: `/v1/${endpoint}`,
+      method: 'POST',
+      headers: {
+        'Authorization':  `Bearer ${STRIPE_SECRET}`,
+        'Content-Type':   'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(data)
+      }
+    }, res => {
+      let out = '';
+      res.on('data', c => out += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(out)); }
+        catch(e) { reject(new Error('Bad JSON from Stripe')); }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
 
 /* ── Replicate helpers ───────────────────────────────────────── */
 function replicatePost(endpoint, body) {
@@ -88,6 +123,36 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(data);
     });
+    return;
+  }
+
+  /* ── Stripe checkout session ── */
+  if (req.method === 'POST' && req.url === '/api/checkout') {
+    try {
+      if (!STRIPE_SECRET) return json(res, 500, { error: 'STRIPE_SECRET_KEY not configured' });
+      const { plan } = await readBody(req);
+      const priceId = STRIPE_PRICES[plan];
+      if (!priceId) return json(res, 400, { error: 'Invalid plan' });
+
+      const proto = req.headers['x-forwarded-proto'] || 'http';
+      const host  = req.headers['x-forwarded-host'] || req.headers.host;
+      const base  = `${proto}://${host}`;
+
+      const session = await stripePost('checkout/sessions', {
+        'mode':                        'subscription',
+        'success_url':                 `${base}/?success=true&plan=${plan}`,
+        'cancel_url':                  `${base}/?canceled=true`,
+        'line_items[0][price]':        priceId,
+        'line_items[0][quantity]':     '1',
+        'allow_promotion_codes':       'true'
+      });
+
+      if (session.error) return json(res, 500, { error: session.error.message });
+      json(res, 200, { url: session.url });
+    } catch(e) {
+      console.error('Checkout error:', e.message);
+      json(res, 500, { error: e.message });
+    }
     return;
   }
 

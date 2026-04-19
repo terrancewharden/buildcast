@@ -880,6 +880,21 @@ function App() {
   const [isPro, setIsPro] = useState(() => {
     try { return localStorage.getItem('bc_pro')==='true'; } catch(e){return false;}
   });
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // Handle Stripe redirect back to app
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('success')==='true') {
+      const plan = p.get('plan') || 'starter';
+      setIsPro(true);
+      try { localStorage.setItem('bc_pro','true'); localStorage.setItem('bc_plan',plan); } catch(e){}
+      window.history.replaceState({}, '', '/');
+    }
+    if (p.get('canceled')==='true') {
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   const remaining = Math.max(0, FREE_LIMIT - usageCount);
   const canGen = isPro || usageCount < FREE_LIMIT;
@@ -1029,15 +1044,25 @@ function App() {
     }
   };
 
-  const doUpgrade = (planId) => {
-    // 🔌 Connect Stripe here
-    // Example: window.location.href = `/checkout?plan=${planId}`
-    const plan = PLANS.find(p=>p.id===planId);
-    alert(`✅ To complete checkout, connect Stripe:\n\nPlan: ${plan.name} ($${plan.price}/mo)\n\nAdd your Stripe publishable key and create a checkout session endpoint.`);
-    // Demo: simulate upgrade
-    setIsPro(true);
-    try { localStorage.setItem('bc_pro','true'); } catch(e){}
-    setShowPricing(false);
+  const doUpgrade = async (planId) => {
+    setCheckoutLoading(true);
+    try {
+      const r = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId })
+      });
+      const data = await r.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Checkout error: ' + (data.error || 'Unknown error'));
+        setCheckoutLoading(false);
+      }
+    } catch(e) {
+      alert('Could not reach checkout. Please try again.');
+      setCheckoutLoading(false);
+    }
   };
 
   const goHome = () => {
