@@ -1,0 +1,16 @@
+{
+  "name": "buildcast",
+  "version": "1.0.0",
+  "description": "Construction content creation app — professional videos and photos in minutes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["construction", "content", "video", "social-media"],
+  "author": "Terrance Harden — T-boyz Table Games LLC",
+  "license": "MIT"
+}
