@@ -731,6 +731,199 @@ function getPhaseLabel(imgIdx, totalImgs, projectInfo) {
   return { phase: phases[idx], day };
 }
 
+/* ══════════════════════════════════════════════
+   VIRAL TIMELAPSE RENDERER
+   Fast cuts · dramatic zoom · flash transitions
+   DAY counter · phase labels · COMPLETE reveal
+══════════════════════════════════════════════ */
+async function renderTimelapse(imgEls, gradeId, platform, onProgress, projectInfo) {
+  return new Promise((resolve, reject) => {
+    const scale = 0.75;
+    const pw = Math.round(Math.min(platform.w, 1080) * scale);
+    const ph = Math.round(pw * platform.h / platform.w);
+    const c = document.createElement('canvas');
+    c.width = pw; c.height = ph;
+    const ctx = c.getContext('2d');
+
+    if (typeof MediaRecorder === 'undefined') {
+      reject(new Error('MediaRecorder not supported. Please use Chrome or Firefox.'));
+      return;
+    }
+
+    const mimeType = getBestMimeType();
+    const chunks = [];
+    const fps = 30;
+    const framesPerImg = 45;   // 1.5s per photo at 30fps
+    const flashFrames = 3;     // white flash frames between clips
+
+    const stream = c.captureStream(fps);
+    const rec = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8000000 });
+    rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+    rec.onerror = e => reject(e.error);
+    rec.start(200);
+
+    const totalImgs = imgEls.length;
+    let imgIdx = 0;
+    let frameInClip = 0;
+
+    const drawFrame = () => {
+      if (imgIdx >= totalImgs) { setTimeout(() => rec.stop(), 1000); return; }
+
+      const img = imgEls[imgIdx];
+      const t = frameInClip / framesPerImg;          // 0 → 1 within clip
+      const isLast  = imgIdx === totalImgs - 1;
+      const isFirst = imgIdx === 0;
+
+      // Cover-fit the image to canvas
+      const { dw, dh, dx, dy } = coverFit(img.naturalWidth, img.naturalHeight, pw, ph);
+
+      // Dramatic zoom: 1.00 → 1.20, alternating left/right drift
+      const zoom      = 1.0 + t * 0.20;
+      const driftDir  = imgIdx % 2 === 0 ? 1 : -1;
+      const ox        = driftDir * t * pw * 0.03;
+
+      // ── Draw photo ──────────────────────────────
+      ctx.fillStyle = '#080909';
+      ctx.fillRect(0, 0, pw, ph);
+      ctx.save();
+      ctx.translate(pw / 2 + ox, ph / 2);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-pw / 2, -ph / 2);
+      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.restore();
+
+      // Color grade
+      if (gradeId) {
+        const id = ctx.getImageData(0, 0, pw, ph);
+        applyGrade(id.data, gradeId);
+        ctx.putImageData(id, 0, 0);
+      }
+
+      // ── HUD Overlays ────────────────────────────
+      if (projectInfo) {
+        const lbl = getPhaseLabel(imgIdx, totalImgs, projectInfo);
+
+        // Bottom progress bar (amber)
+        const progPct = (imgIdx + t) / totalImgs;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, ph - 6, pw, 6);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(0, ph - 6, pw * progPct, 6);
+
+        // Lower-third gradient
+        const lthH = Math.round(ph * 0.23);
+        const lthY = ph - lthH - 6;
+        const grad = ctx.createLinearGradient(0, lthY, 0, ph - 6);
+        grad.addColorStop(0,   'rgba(0,0,0,0)');
+        grad.addColorStop(0.4, 'rgba(0,0,0,0.72)');
+        grad.addColorStop(1,   'rgba(0,0,0,0.90)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, lthY, pw, lthH);
+
+        // Amber accent bar
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(0, lthY + Math.round(lthH * 0.18), 5, Math.round(lthH * 0.64));
+
+        // Phase label
+        const fs = Math.max(13, Math.round(pw * 0.027));
+        ctx.save();
+        ctx.font = `700 ${fs}px Inter, Arial, sans-serif`;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 4;
+        ctx.fillText(lbl.phase, 20, lthY + lthH * 0.44);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // DAY counter — bold, amber, top right
+        const dayStr = `DAY ${lbl.day}`;
+        const dayFs  = Math.max(18, Math.round(pw * 0.054));
+        ctx.save();
+        ctx.font = `900 ${dayFs}px Inter, "Arial Black", sans-serif`;
+        ctx.textAlign    = 'right';
+        ctx.textBaseline = 'top';
+        ctx.shadowColor  = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 10;
+        ctx.fillStyle    = '#F59E0B';
+        ctx.fillText(dayStr, pw - 16, 16);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Project type badge — top left, first clip only
+        if (isFirst) {
+          const ptFs   = Math.max(11, Math.round(pw * 0.021));
+          const ptText = projectInfo.type.toUpperCase();
+          ctx.save();
+          ctx.font = `800 ${ptFs}px Inter, Arial, sans-serif`;
+          const ptW = ctx.measureText(ptText).width + 24;
+          const ptH = ptFs + 14;
+          ctx.fillStyle = '#F59E0B';
+          roundRect(ctx, 14, 14, ptW, ptH, 4); ctx.fill();
+          ctx.fillStyle    = '#000000';
+          ctx.textAlign    = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(ptText, 26, 14 + ptH / 2);
+          ctx.restore();
+        }
+
+        // "COMPLETE" reveal — last clip, after 55% of clip
+        if (isLast && t >= 0.55) {
+          const revT  = (t - 0.55) / 0.45;
+          const alpha = Math.min(1, revT * 2.2);
+
+          // Darken frame for readability
+          ctx.fillStyle = `rgba(0,0,0,${0.38 * alpha})`;
+          ctx.fillRect(0, 0, pw, ph);
+
+          const cFs = Math.max(28, Math.round(pw * 0.11));
+          ctx.save();
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor  = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 24;
+
+          // Amber drop-shadow layer
+          ctx.font      = `900 ${cFs}px Inter, "Arial Black", sans-serif`;
+          ctx.fillStyle = `rgba(245,158,11,${alpha})`;
+          ctx.fillText('COMPLETE', pw / 2 + 3, ph / 2 + 3);
+          // White top layer
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.fillText('COMPLETE', pw / 2, ph / 2);
+          ctx.shadowBlur = 0;
+
+          // Sub-label: project type
+          const subFs = Math.max(11, Math.round(pw * 0.030));
+          ctx.font      = `600 ${subFs}px Inter, Arial, sans-serif`;
+          ctx.fillStyle = `rgba(245,158,11,${alpha * 0.9})`;
+          ctx.letterSpacing = '0.12em';
+          ctx.fillText(projectInfo.type.toUpperCase(), pw / 2, ph / 2 + cFs * 0.74);
+          ctx.restore();
+        }
+      }
+
+      // White flash at start of each clip (except first)
+      if (!isFirst && frameInClip < flashFrames) {
+        const fa = (1 - frameInClip / flashFrames) * 0.88;
+        ctx.fillStyle = `rgba(255,255,255,${fa})`;
+        ctx.fillRect(0, 0, pw, ph);
+      }
+
+      // Advance counters
+      frameInClip++;
+      if (frameInClip >= framesPerImg) {
+        imgIdx++;
+        frameInClip = 0;
+        onProgress && onProgress(imgIdx / totalImgs);
+      }
+
+      if (imgIdx < totalImgs) requestAnimationFrame(drawFrame);
+      else setTimeout(() => rec.stop(), 1200);
+    };
+
+    requestAnimationFrame(drawFrame);
+  });
+}
+
 async function renderVideo(imgEls, gradeId, platform, durationSec, mode, onProgress, projectInfo) {
   return new Promise((resolve, reject) => {
     const scale = 0.75;
@@ -937,75 +1130,25 @@ function App() {
         const mode = selType.id==='timelapse' ? 'timelapse' : 'sizzle';
         let projectInfo = null;
 
-        // ── AI Timelapse path ──────────────────────────────────
+        // ── Timelapse path (viral canvas renderer) ────────────
         if (selType.id==='timelapse') {
           setPhase('Scanning photos — identifying project type...');
-          await sleep(400);
+          await sleep(300);
           projectInfo = analyzeProjectType(imgEls);
-          setPhase(`${projectInfo.type} detected — sending to AI...`);
+          setPhase(`${projectInfo.type} detected — building timelapse...`);
+          await sleep(300);
+          setProgress(8);
+
+          const blob = await renderTimelapse(imgEls, grade, platform, p => {
+            setProgress(8 + p * 86);
+            if      (p < 0.3) setPhase('Fast cutting clips...');
+            else if (p < 0.7) setPhase('Rendering zoom effects...');
+            else               setPhase('Encoding timelapse...');
+          }, projectInfo);
+
+          setProgress(100);
           await sleep(400);
-
-          try {
-            // Resize all photos for API
-            setPhase('Preparing photos for AI generation...');
-            const resized = await Promise.all(imgEls.map(img => resizeForAI(img)));
-            setProgress(6);
-
-            // Start all predictions in parallel
-            const predIds = [];
-            for (let i=0; i<resized.length; i++) {
-              setPhase(`Queuing AI clip ${i+1} of ${resized.length}...`);
-              const r = await fetch('/api/timelapse/start', {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ image: resized[i] })
-              });
-              const d = await r.json();
-              if (d.error) throw new Error(d.error);
-              predIds.push(d.id);
-              setProgress(6 + ((i+1)/resized.length)*12);
-            }
-
-            // Poll until all clips complete
-            const videoUrls = new Array(predIds.length).fill(null);
-            const done = new Set();
-            setPhase(`AI generating ${predIds.length} timelapse clip${predIds.length>1?'s':''}...`);
-
-            while (done.size < predIds.length) {
-              await sleep(3500);
-              for (let i=0; i<predIds.length; i++) {
-                if (done.has(i)) continue;
-                const r = await fetch(`/api/timelapse/status?id=${predIds[i]}`);
-                const d = await r.json();
-                if (d.status==='succeeded' && d.url) {
-                  videoUrls[i] = d.url;
-                  done.add(i);
-                  setProgress(18 + (done.size/predIds.length)*76);
-                  setPhase(`Clip ${done.size} of ${predIds.length} ready${done.size<predIds.length?' — AI still working...':' — finishing up!'}`);
-                } else if (d.status==='failed') {
-                  throw new Error('AI generation failed: ' + (d.error||'unknown'));
-                }
-              }
-            }
-
-            setProgress(100);
-            await sleep(400);
-            res = { type:'ai-timelapse', urls:videoUrls, projectInfo, filename:'buildcast_timelapse' };
-
-          } catch(aiErr) {
-            // Graceful fallback to canvas timelapse
-            console.warn('AI timelapse failed, falling back to canvas:', aiErr.message);
-            setPhase('Falling back to canvas render...');
-            await sleep(400);
-            setProgress(8);
-            const dur = duration;
-            const blob = await renderVideo(imgEls, grade, platform, dur, 'timelapse', p=>{
-              setProgress(8+p*82);
-              if (p<0.5) setPhase('Rendering frames...'); else setPhase('Encoding video...');
-            }, projectInfo);
-            setProgress(100);
-            await sleep(400);
-            res = { type:'video', blob, url:URL.createObjectURL(blob), filename:'buildcast_timelapse.webm' };
-          }
+          res = { type:'video', blob, url:URL.createObjectURL(blob), filename:'buildcast_timelapse.webm' };
 
         } else {
           // ── Sizzle / Presentation (canvas path) ──────────────
