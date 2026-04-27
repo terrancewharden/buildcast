@@ -2,1802 +2,584 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BuildCast — Construction Content Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>BuildCast — AI Construction Timelapse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080909;
-  --s1:#0E0F11;
-  --s2:#141518;
-  --s3:#1C1E23;
-  --s4:#22252C;
-  --border:#2A2D35;
-  --border-light:#343840;
-  --amber:#F59E0B;
-  --amber-bright:#FCD34D;
-  --amber-dim:rgba(245,158,11,0.1);
-  --amber-glow:rgba(245,158,11,0.25);
-  --blue:#3B82F6;
-  --green:#10B981;
-  --purple:#8B5CF6;
-  --red:#EF4444;
-  --text:#F2F2F2;
-  --text-2:#9CA3AF;
-  --text-3:#4B5563;
-  --text-4:#2D3139;
-  --r:12px;
-  --r-lg:20px;
-  --r-xl:28px;
-  --t:all 0.2s ease;
-  --shadow-card:0 4px 24px rgba(0,0,0,0.4);
-  --shadow-hover:0 16px 48px rgba(0,0,0,0.6),0 0 0 1px rgba(245,158,11,0.2);
+  --bg:#080909; --s1:#0E0F11; --s2:#141518; --s3:#1C1E23; --s4:#22252C;
+  --border:#2A2D35; --border-light:#343840;
+  --amber:#F59E0B; --amber-bright:#FCD34D;
+  --amber-dim:rgba(245,158,11,0.08); --amber-glow:rgba(245,158,11,0.22);
+  --green:#10B981; --red:#EF4444;
+  --text:#F2F2F2; --text-2:#9CA3AF; --text-3:#4B5563;
+  --r:12px; --r-lg:20px; --r-xl:32px;
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--s1)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-/* ── ANIMATIONS ─────────────────────────────── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.45}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes shimmer{0%{left:-100%}100%{left:200%}}
-@keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes borderGlow{0%,100%{box-shadow:0 0 20px rgba(245,158,11,0.15)}50%{box-shadow:0 0 40px rgba(245,158,11,0.4)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+@keyframes glow{0%,100%{box-shadow:0 0 24px var(--amber-glow)}50%{box-shadow:0 0 56px rgba(245,158,11,0.5),0 0 100px rgba(245,158,11,0.15)}}
+@keyframes bounceIn{0%{transform:scale(0.82);opacity:0}65%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+@keyframes barFill{from{width:0%}to{width:var(--target-w)}}
 
-.fade-up{animation:fadeUp 0.5s ease both}
-.fade-up-d1{animation:fadeUp 0.5s ease 0.08s both}
-.fade-up-d2{animation:fadeUp 0.5s ease 0.16s both}
-.fade-up-d3{animation:fadeUp 0.5s ease 0.24s both}
-.fade-in{animation:fadeIn 0.35s ease both}
+.fade-up{animation:fadeUp 0.55s ease both}
+.fade-up-1{animation:fadeUp 0.55s 0.1s ease both}
+.fade-up-2{animation:fadeUp 0.55s 0.2s ease both}
+.fade-up-3{animation:fadeUp 0.55s 0.32s ease both}
+.fade-in{animation:fadeIn 0.4s ease both}
+.bounce-in{animation:bounceIn 0.55s ease both}
 
-/* ── LAYOUT ──────────────────────────────────── */
-.app{min-height:100vh;display:flex;flex-direction:column}
-.screen{flex:1;padding:0 32px 100px;max-width:1200px;margin:0 auto;width:100%}
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(8,9,9,0.96);backdrop-filter:blur(24px)}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:4px;cursor:pointer;display:flex;align-items:center}
+.logo-accent{color:var(--amber)}
+.nav-pill{font-size:11px;font-weight:700;letter-spacing:0.5px;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,0.28);padding:5px 12px;border-radius:20px}
 
-/* ── NAV ─────────────────────────────────────── */
-.nav{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:18px 40px;
-  border-bottom:1px solid var(--border);
-  position:sticky;top:0;
-  background:rgba(8,9,9,0.92);
-  backdrop-filter:blur(24px);
-  z-index:100;
-}
-.nav-logo{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:26px;letter-spacing:4px;
-  cursor:pointer;display:flex;align-items:center;gap:2px;
-}
-.nav-logo .accent{color:var(--amber)}
-.nav-logo .rest{color:var(--text)}
-.nav-logo-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);margin-left:6px;animation:pulse 2.5s infinite}
-.nav-right{display:flex;align-items:center;gap:12px}
-.usage-pill{
-  display:flex;align-items:center;gap:8px;
-  background:var(--s3);border:1px solid var(--border);
-  border-radius:100px;padding:7px 14px;
-  font-size:12px;font-weight:500;color:var(--text-2);
-}
-.usage-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0;animation:pulse 2s infinite}
-.usage-dot.green{background:var(--green)}
-.pro-badge{
-  display:flex;align-items:center;gap:6px;
-  background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(252,211,77,0.1));
-  border:1px solid rgba(245,158,11,0.4);
-  border-radius:100px;padding:7px 16px;
-  font-size:12px;font-weight:700;color:var(--amber);letter-spacing:1px;
-}
+/* HOME */
+.home{min-height:calc(100vh - 64px);display:flex;flex-direction:column;align-items:center}
+.hero{width:100%;max-width:880px;padding:88px 32px 56px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:26px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--amber-dim);border:1px solid rgba(245,158,11,0.25);border-radius:40px;padding:8px 18px;font-size:12px;font-weight:700;color:var(--amber);letter-spacing:0.5px}
+.hero-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 1.8s ease-in-out infinite}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(54px,9vw,100px);line-height:0.94;letter-spacing:2px}
+.hero-em{color:var(--amber)}
+.hero-sub{font-size:clamp(15px,2.2vw,19px);color:var(--text-2);line-height:1.65;max-width:540px;font-weight:400}
+.hero-cta{display:inline-flex;align-items:center;gap:10px;background:var(--amber);color:#000;font-size:16px;font-weight:800;letter-spacing:0.4px;padding:17px 40px;border-radius:50px;border:none;cursor:pointer;box-shadow:0 0 40px var(--amber-glow);transition:all 0.2s;margin-top:4px}
+.hero-cta:hover{background:var(--amber-bright);transform:translateY(-2px);box-shadow:0 0 64px rgba(245,158,11,0.55)}
+.hero-arrow{font-size:18px;transition:transform 0.2s}
+.hero-cta:hover .hero-arrow{transform:translateX(5px)}
 
-/* ── BUTTONS ─────────────────────────────────── */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:11px 22px;border-radius:var(--r);border:none;
-  cursor:pointer;font-family:'Inter',sans-serif;
-  font-size:14px;font-weight:600;transition:var(--t);
-  text-decoration:none;white-space:nowrap;letter-spacing:0.2px;
-}
-.btn-primary{background:var(--amber);color:#000}
-.btn-primary:hover{background:var(--amber-bright);transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,158,11,0.4)}
-.btn-primary:active{transform:translateY(0)}
-.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:rgba(245,158,11,0.5);color:var(--amber)}
-.btn-dark{background:var(--s4);color:var(--text);border:1px solid var(--border)}
-.btn-dark:hover{border-color:var(--amber);color:var(--amber)}
-.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
-.btn-lg{padding:15px 36px;font-size:16px;border-radius:14px}
-.btn-xl{padding:17px 48px;font-size:18px;border-radius:16px;font-family:'Bebas Neue';letter-spacing:3px}
-.btn:disabled{opacity:0.38;cursor:not-allowed;transform:none !important;box-shadow:none !important}
+/* Hero visual */
+.hero-visual{width:100%;max-width:860px;padding:0 32px 88px;display:flex;align-items:center;justify-content:center}
+.hv-card{flex:1;max-width:260px;aspect-ratio:9/16;border-radius:var(--r-xl);overflow:hidden;position:relative;border:1px solid var(--border)}
+.hv-before{background:linear-gradient(155deg,#1a1611 0%,#2d1f08 55%,#111010 100%)}
+.hv-after{background:linear-gradient(155deg,#081520 0%,#0d3025 55%,#081416 100%);animation:glow 3s ease-in-out infinite}
+.hv-grid{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 29px,rgba(255,255,255,0.025) 29px,rgba(255,255,255,0.025) 30px),repeating-linear-gradient(90deg,transparent,transparent 29px,rgba(255,255,255,0.025) 29px,rgba(255,255,255,0.025) 30px)}
+.hv-label{position:absolute;bottom:16px;left:16px;font-size:10px;font-weight:800;letter-spacing:2.5px;padding:4px 10px;border-radius:4px;background:rgba(0,0,0,0.55)}
+.hv-before .hv-label{color:var(--text-3)}
+.hv-after .hv-label{color:var(--amber)}
+.hv-mid{display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 28px;color:var(--amber)}
+.hv-ai-bubble{width:52px;height:52px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:#000;box-shadow:0 0 36px var(--amber-glow);animation:glow 2.4s ease-in-out infinite}
+.hv-line{width:2px;height:44px;background:linear-gradient(transparent,var(--amber) 50%,transparent)}
 
-/* ── HOME ────────────────────────────────────── */
-.home-hero{padding:72px 0 56px;text-align:center;position:relative}
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--amber-dim);border:1px solid rgba(245,158,11,0.35);
-  border-radius:100px;padding:6px 18px;
-  font-size:11px;font-weight:700;color:var(--amber);
-  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px;
-}
-.hero-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(60px,9vw,108px);line-height:0.88;
-  letter-spacing:3px;margin-bottom:24px;
-}
-.hero-title .line-1{display:block;color:var(--text)}
-.hero-title .line-2{
-  display:block;
-  background:linear-gradient(90deg,var(--amber),var(--amber-bright),var(--amber));
-  background-size:200%;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-  animation:gradientMove 3s ease infinite;
-}
-.hero-sub{
-  font-size:17px;color:var(--text-2);
-  max-width:520px;margin:0 auto 40px;line-height:1.65;
-}
-.hero-free-label{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:13px;color:var(--text-3);margin-bottom:12px;
-}
-.hero-free-label span{color:var(--amber);font-weight:600}
+/* HOW IT WORKS */
+.how{width:100%;max-width:860px;padding:0 32px 100px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.how-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 22px;transition:border-color 0.2s}
+.how-card:hover{border-color:var(--border-light)}
+.how-num{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:1px;line-height:1;margin-bottom:12px;color:var(--s4)}
+.how-card:last-child .how-num{color:rgba(245,158,11,0.18)}
+.how-icon{font-size:28px;margin-bottom:12px}
+.how-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.how-desc{font-size:13px;color:var(--text-2);line-height:1.6}
 
-.content-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
-  gap:18px;
-}
-.content-card{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:var(--r-xl);padding:28px 28px 24px;
-  cursor:pointer;transition:all 0.25s ease;
-  position:relative;overflow:hidden;
-}
-.content-card::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(245,158,11,0.04),transparent);
-  opacity:0;transition:opacity 0.25s;border-radius:inherit;
-  pointer-events:none;
-}
-.content-card:hover{
-  transform:translateY(-5px);
-  border-color:rgba(245,158,11,0.35);
-  box-shadow:var(--shadow-hover);
-}
-.content-card:hover::after{opacity:1}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
-.card-icon-wrap{
-  width:52px;height:52px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:26px;flex-shrink:0;
-}
-.card-badge{
-  font-size:10px;font-weight:800;letter-spacing:1.5px;
-  text-transform:uppercase;padding:4px 10px;border-radius:100px;
-}
-.card-badge-amber{background:var(--amber);color:#000}
-.card-badge-blue{background:var(--blue);color:#fff}
-.card-badge-purple{background:var(--purple);color:#fff}
-.card-name{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;margin-bottom:8px}
-.card-desc{font-size:13.5px;color:var(--text-2);line-height:1.55;margin-bottom:20px}
-.card-bottom{display:flex;align-items:center;justify-content:space-between}
-.card-chips{display:flex;gap:7px;flex-wrap:wrap}
-.chip{
-  background:var(--s4);border:1px solid var(--border);
-  border-radius:6px;padding:3px 9px;
-  font-size:11px;font-weight:500;color:var(--text-3);
-}
-.card-arrow{color:var(--text-4);font-size:18px;transition:var(--t)}
-.content-card:hover .card-arrow{color:var(--amber);transform:translate(4px,-2px)}
+/* UPLOAD SCREEN */
+.upload-screen{max-width:840px;margin:0 auto;padding:52px 32px 100px}
+.screen-h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:2px;margin-bottom:8px}
+.screen-sub{font-size:15px;color:var(--text-2);margin-bottom:40px}
 
-/* ── UPLOAD ──────────────────────────────────── */
-.upload-zone{
-  border:2px dashed var(--border);border-radius:var(--r-xl);
-  padding:72px 40px;text-align:center;
-  cursor:pointer;transition:all 0.25s;
-  background:var(--s1);position:relative;overflow:hidden;
-  min-height:280px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
-.upload-zone:hover,.upload-zone.drag-over{
-  border-color:var(--amber);
-  background:var(--amber-dim);
-}
+.upload-pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px}
+.upload-zone{aspect-ratio:3/4;border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.2s,background 0.2s;background:var(--s1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--amber);background:var(--amber-dim)}
 .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10;font-size:0}
-.upload-float{animation:float 3.5s ease-in-out infinite;font-size:56px;margin-bottom:20px}
-.upload-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;margin-bottom:10px}
-.upload-sub{color:var(--text-2);font-size:15px;margin-bottom:6px}
-.upload-hint{color:var(--text-3);font-size:12px}
+.uz-tag{position:absolute;top:14px;left:14px;font-size:9px;font-weight:800;letter-spacing:2.5px;padding:4px 10px;border-radius:4px;background:var(--s3);z-index:5}
+.uz-tag.before{color:var(--text-2)}
+.uz-tag.after{color:var(--amber);background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2)}
+.uz-icon{font-size:38px;opacity:0.35}
+.uz-hint{font-size:13px;color:var(--text-3);text-align:center;padding:0 16px;line-height:1.5}
+.uz-thumb{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;z-index:3}
+.uz-check{position:absolute;top:12px;right:12px;width:26px;height:26px;background:var(--amber);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;z-index:6}
+.uz-replace{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.72);padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text-2);opacity:0;transition:opacity 0.2s;z-index:7}
+.upload-zone:hover .uz-replace{opacity:1}
 
-.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:20px}
-.photo-thumb{
-  aspect-ratio:1;border-radius:10px;overflow:hidden;
-  position:relative;background:var(--s3);border:1px solid var(--border);
-  transition:var(--t);
-}
-.photo-thumb:hover{border-color:rgba(245,158,11,0.4)}
-.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.photo-remove{
-  position:absolute;top:6px;right:6px;
-  background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);
-  border:none;color:#fff;width:22px;height:22px;
-  border-radius:50%;cursor:pointer;
-  display:none;align-items:center;justify-content:center;font-size:11px;
-  transition:var(--t);
-}
-.photo-thumb:hover .photo-remove{display:flex}
-.photo-remove:hover{background:var(--red)}
+/* Config */
+.cfg-section{margin-bottom:28px}
+.cfg-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-3);text-transform:uppercase;margin-bottom:12px}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.type-pill{padding:11px 8px;text-align:center;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600;background:var(--s1);color:var(--text-2);transition:all 0.15s;line-height:1.3}
+.type-pill:hover{border-color:var(--amber);color:var(--text)}
+.type-pill.sel{border-color:var(--amber);background:var(--amber-dim);color:var(--amber)}
+.fmt-row{display:flex;gap:10px}
+.fmt-btn{flex:1;padding:13px 8px;border:1px solid var(--border);border-radius:var(--r);background:var(--s1);color:var(--text-2);cursor:pointer;font-size:12px;font-weight:600;text-align:center;transition:all 0.15s}
+.fmt-btn:hover{border-color:var(--amber)}
+.fmt-btn.sel{border-color:var(--amber);background:var(--amber-dim);color:var(--amber)}
+.fmt-icon{font-size:22px;display:block;margin-bottom:5px}
 
-/* ── CONFIGURE ───────────────────────────────── */
-.config-layout{display:grid;grid-template-columns:1fr 320px;gap:32px;align-items:start}
-.config-label{
-  font-family:'Bebas Neue',sans-serif;font-size:18px;
-  letter-spacing:2px;color:var(--text-2);margin-bottom:14px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.grade-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:32px}
-.grade-card{
-  background:var(--s2);border:2px solid var(--border);
-  border-radius:var(--r);padding:14px;cursor:pointer;
-  transition:var(--t);position:relative;overflow:hidden;
-}
-.grade-card.sel{border-color:var(--amber);background:var(--amber-dim)}
-.grade-card:hover:not(.sel){border-color:rgba(245,158,11,0.3)}
-.grade-swatch{width:100%;height:52px;border-radius:8px;margin-bottom:10px}
-.grade-name{font-weight:600;font-size:13px;margin-bottom:3px}
-.grade-tag{font-size:11px;color:var(--text-3)}
-.grade-check{
-  position:absolute;top:10px;right:10px;
-  width:20px;height:20px;border-radius:50%;
-  background:var(--amber);color:#000;
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:800;
-  opacity:0;transition:opacity 0.2s;
-}
-.grade-card.sel .grade-check{opacity:1}
+/* Generate button */
+.gen-btn{width:100%;padding:19px;background:var(--amber);color:#000;font-size:17px;font-weight:900;letter-spacing:0.4px;border:none;border-radius:50px;cursor:pointer;box-shadow:0 0 40px var(--amber-glow);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.gen-btn:hover:not(:disabled){background:var(--amber-bright);transform:translateY(-2px);box-shadow:0 0 64px rgba(245,158,11,0.5)}
+.gen-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none;background:var(--s3);color:var(--text-3)}
 
-.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:32px}
-.platform-card{
-  background:var(--s2);border:2px solid var(--border);
-  border-radius:var(--r);padding:14px 12px;cursor:pointer;
-  transition:var(--t);text-align:center;
-}
-.platform-card.sel{border-color:var(--amber);background:var(--amber-dim)}
-.platform-card:hover:not(.sel){border-color:rgba(245,158,11,0.3)}
-.platform-icon{font-size:26px;margin-bottom:8px}
-.platform-name{font-weight:600;font-size:12px;line-height:1.3;margin-bottom:4px}
-.platform-aspect{font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums}
+/* PROCESSING SCREEN */
+.proc-screen{max-width:580px;margin:0 auto;padding:80px 32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:44px}
+.proc-ring{width:82px;height:82px;border:3px solid var(--s4);border-top-color:var(--amber);border-radius:50%;animation:spin 0.85s linear infinite}
+.proc-h1{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:2px;margin-bottom:8px}
+.proc-phase{font-size:15px;color:var(--text-2);min-height:22px;transition:all 0.3s}
+.proc-bar-wrap{width:100%;height:6px;background:var(--s3);border-radius:3px;overflow:hidden}
+.proc-bar{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber-bright));border-radius:3px;transition:width 0.7s ease}
+.proc-pct{text-align:right;font-size:12px;color:var(--text-3);margin-top:7px}
+.proc-steps{width:100%;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--s1)}
+.proc-step{display:flex;align-items:center;gap:16px;padding:15px 20px;border-bottom:1px solid var(--border)}
+.proc-step:last-child{border-bottom:none}
+.ps-dot{width:28px;height:28px;min-width:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--s3);color:var(--text-3);transition:all 0.3s}
+.ps-dot.done{background:var(--amber);color:#000}
+.ps-dot.active{background:transparent;border:2px solid var(--amber);color:var(--amber);animation:pulse 1.1s ease-in-out infinite}
+.ps-text{font-size:14px;font-weight:500;color:var(--text-3);transition:color 0.3s}
+.ps-text.done{color:var(--text)}
+.ps-text.active{color:var(--text);font-weight:600}
+.proc-note{font-size:13px;color:var(--text-3);background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;line-height:1.6}
 
-.range-wrap{margin-bottom:32px}
-.range-track{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:5px;border-radius:3px;
-  background:var(--s4);outline:none;cursor:pointer;
-}
-.range-track::-webkit-slider-thumb{
-  -webkit-appearance:none;width:20px;height:20px;
-  border-radius:50%;background:var(--amber);cursor:pointer;
-  box-shadow:0 0 0 4px rgba(245,158,11,0.2);
-  transition:box-shadow 0.2s;
-}
-.range-track::-webkit-slider-thumb:hover{box-shadow:0 0 0 6px rgba(245,158,11,0.3)}
-.range-labels{display:flex;justify-content:space-between;margin-top:8px;color:var(--text-3);font-size:11px}
+/* RESULT SCREEN */
+.result-screen{max-width:680px;margin:0 auto;padding:52px 32px 100px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:30px}
+.result-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:40px;padding:8px 18px;font-size:13px;font-weight:700;color:var(--green)}
+.result-h1{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:2px;line-height:1}
+.video-container{width:100%;border-radius:var(--r-xl);overflow:hidden;border:1px solid var(--border);background:#000;box-shadow:0 0 80px rgba(0,0,0,0.7)}
+.video-container.portrait{max-width:340px}
+.video-container video{width:100%;display:block}
+.result-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;width:100%}
+.btn-amber{flex:1;min-width:150px;padding:16px 28px;background:var(--amber);color:#000;font-size:15px;font-weight:800;border:none;border-radius:50px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 30px var(--amber-glow)}
+.btn-amber:hover:not(:disabled){background:var(--amber-bright);transform:translateY(-2px)}
+.btn-amber:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-ghost{flex:1;min-width:150px;padding:16px 28px;background:transparent;color:var(--text);font-size:15px;font-weight:700;border:1px solid var(--border);border-radius:50px;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--amber);color:var(--amber)}
+.result-note{font-size:13px;color:var(--text-3)}
 
-/* ── STICKY GENERATE PANEL ───────────────────── */
-.gen-panel{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:var(--r-xl);padding:24px;
-  position:sticky;top:90px;
-}
-.gen-preview{
-  border-radius:12px;background:var(--s4);
-  overflow:hidden;position:relative;margin-bottom:20px;
-}
-.gen-preview-inner{
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:8px;color:var(--text-3);
-}
-.gen-meta{margin-bottom:20px}
-.gen-meta-row{
-  display:flex;align-items:center;justify-content:space-between;
-  font-size:12px;padding:6px 0;border-bottom:1px solid var(--s4);
-}
-.gen-meta-row:last-child{border:none}
-.gen-meta-label{color:var(--text-3)}
-.gen-meta-value{color:var(--text-2);font-weight:500}
-.paywall-note{
-  background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(252,211,77,0.04));
-  border:1px solid rgba(245,158,11,0.25);
-  border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;
-}
+/* ERROR */
+.err-box{background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.28);border-radius:var(--r);padding:16px 20px;font-size:14px;color:var(--red);text-align:left;line-height:1.55}
 
-/* ── PROCESSING ──────────────────────────────── */
-.processing-wrap{
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;min-height:65vh;text-align:center;
-}
-.proc-ring-wrap{
-  position:relative;width:128px;height:128px;margin-bottom:40px;
-}
-.proc-ring{
-  width:128px;height:128px;border:3px solid var(--s4);
-  border-top-color:var(--amber);border-radius:50%;
-  animation:spin 1.1s linear infinite;position:absolute;inset:0;
-}
-.proc-ring-inner{
-  width:100px;height:100px;border:2px solid var(--s3);
-  border-top-color:rgba(245,158,11,0.4);border-radius:50%;
-  animation:spin 1.8s linear infinite reverse;
-  position:absolute;top:14px;left:14px;
-}
-.proc-emoji{
-  position:absolute;inset:0;display:flex;align-items:center;
-  justify-content:center;font-size:38px;
-}
-.proc-title{
-  font-family:'Bebas Neue',sans-serif;font-size:52px;
-  letter-spacing:4px;margin-bottom:10px;
-}
-.proc-phase{color:var(--text-2);font-size:15px;margin-bottom:40px;min-height:24px}
-.progress-bar{
-  width:100%;max-width:420px;height:5px;
-  background:var(--s4);border-radius:3px;overflow:hidden;
-}
-.progress-fill{
-  height:100%;border-radius:3px;
-  background:linear-gradient(90deg,var(--amber),var(--amber-bright));
-  transition:width 0.3s ease;position:relative;overflow:hidden;
-}
-.progress-fill::after{
-  content:'';position:absolute;top:0;bottom:0;
-  width:60px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
-  animation:shimmer 1.5s infinite;
-}
-.progress-pct{
-  margin-top:14px;font-size:14px;font-weight:700;
-  color:var(--amber);font-variant-numeric:tabular-nums;
-}
-.proc-tip{
-  margin-top:36px;color:var(--text-3);font-size:13px;
-  max-width:360px;line-height:1.65;
-}
-
-/* ── RESULT ──────────────────────────────────── */
-.result-layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start;margin-top:24px}
-.result-preview-card{
-  background:var(--s1);border:1px solid var(--border);
-  border-radius:var(--r-xl);overflow:hidden;
-}
-.result-preview-card video,
-.result-preview-card img{width:100%;display:block}
-.photo-carousel{
-  display:flex;gap:8px;overflow-x:auto;padding:12px;
-}
-.photo-carousel::-webkit-scrollbar{height:3px}
-.photo-carousel img{
-  height:72px;border-radius:7px;cursor:pointer;
-  border:2px solid transparent;flex-shrink:0;
-  transition:var(--t);
-}
-.photo-carousel img.active{border-color:var(--amber)}
-.photo-carousel img:hover{opacity:0.85}
-
-.result-meta-row{
-  display:flex;gap:12px;margin-top:14px;
-}
-.result-meta-pill{
-  flex:1;background:var(--s2);border:1px solid var(--border);
-  border-radius:10px;padding:14px 16px;
-}
-.result-meta-key{font-size:11px;color:var(--text-3);margin-bottom:4px}
-.result-meta-val{font-size:13px;font-weight:600}
-
-.dl-panel{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:var(--r-xl);padding:24px;
-}
-.dl-title{
-  font-family:'Bebas Neue',sans-serif;font-size:22px;
-  letter-spacing:2px;margin-bottom:18px;
-}
-.dl-btn{
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--s3);border:1px solid var(--border);
-  border-radius:10px;padding:13px 16px;margin-bottom:9px;
-  cursor:pointer;transition:var(--t);text-decoration:none;color:inherit;
-}
-.dl-btn:hover{border-color:rgba(245,158,11,0.4);background:var(--amber-dim)}
-.dl-btn-left{display:flex;align-items:center;gap:12px}
-.dl-icon{font-size:22px}
-.dl-name{font-weight:600;font-size:13px}
-.dl-size{font-size:11px;color:var(--text-3);margin-top:2px}
-.dl-arrow{color:var(--text-4);transition:var(--t);font-size:16px}
-.dl-btn:hover .dl-arrow{color:var(--amber);transform:translateX(3px)}
-
-.tip-card{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:18px;margin-top:14px;
-}
-.tip-label{
-  font-size:11px;font-weight:700;letter-spacing:1.5px;
-  text-transform:uppercase;color:var(--text-3);margin-bottom:10px;
-  font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;
-}
-.tip-text{font-size:12px;color:var(--text-3);line-height:1.65}
-
-/* ── SCREEN HEADER ───────────────────────────── */
-.screen-header{padding:40px 0 28px}
-.back-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  color:var(--text-3);font-size:13px;cursor:pointer;
-  margin-bottom:18px;transition:var(--t);
-  background:none;border:none;padding:0;
-}
-.back-btn:hover{color:var(--amber)}
-.screen-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px}
-.screen-sub{color:var(--text-2);font-size:15px;margin-top:6px}
-
-/* ── BOTTOM BAR ──────────────────────────────── */
-.bottom-bar{
-  position:sticky;bottom:0;
-  background:rgba(8,9,9,0.96);border-top:1px solid var(--border);
-  padding:16px 40px;
-  display:flex;align-items:center;justify-content:space-between;
-  backdrop-filter:blur(20px);z-index:50;
-}
-.bottom-left{color:var(--text-2);font-size:13px}
-.bottom-left strong{color:var(--text);font-weight:600}
-
-/* ── PRICING MODAL ───────────────────────────── */
-.overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.88);
-  z-index:200;display:flex;align-items:center;justify-content:center;
-  padding:20px;backdrop-filter:blur(10px);
-}
-.modal{
-  background:var(--s1);border:1px solid var(--border-light);
-  border-radius:var(--r-xl);max-width:980px;width:100%;
-  padding:52px 48px;animation:fadeUp 0.3s ease;
-  overflow-y:auto;max-height:92vh;position:relative;
-}
-.modal-close{
-  position:absolute;top:20px;right:20px;
-  background:var(--s3);border:1px solid var(--border);
-  color:var(--text-2);width:36px;height:36px;
-  border-radius:50%;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:var(--t);font-size:14px;
-}
-.modal-close:hover{border-color:var(--amber);color:var(--amber)}
-.modal-header{text-align:center;margin-bottom:52px}
-.modal-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--amber-dim);border:1px solid rgba(245,158,11,0.3);
-  border-radius:100px;padding:6px 18px;
-  font-size:11px;font-weight:700;color:var(--amber);
-  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;
-}
-.modal-title{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:3px;margin-bottom:10px}
-.modal-sub{color:var(--text-2);font-size:16px}
-.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.plan-card{
-  background:var(--s2);border:2px solid var(--border);
-  border-radius:var(--r-xl);padding:32px 24px;
-  position:relative;transition:all 0.25s;
-}
-.plan-card.pop{
-  border-color:var(--amber);
-  box-shadow:0 0 40px rgba(245,158,11,0.12);
-}
-.pop-badge{
-  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-  background:var(--amber);color:#000;font-size:10px;
-  font-weight:800;letter-spacing:2px;padding:4px 18px;border-radius:100px;
-  white-space:nowrap;
-}
-.plan-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;margin-bottom:6px}
-.plan-price-wrap{margin-bottom:4px;display:flex;align-items:baseline;gap:4px}
-.plan-price{font-size:52px;font-weight:800;line-height:1}
-.plan-price-per{font-size:16px;font-weight:400;color:var(--text-2)}
-.plan-videos{color:var(--text-3);font-size:13px;margin-bottom:24px}
-.plan-features{list-style:none;margin-bottom:28px}
-.plan-features li{
-  display:flex;align-items:flex-start;gap:10px;
-  font-size:13px;color:var(--text-2);padding:5px 0;
-}
-.plan-features li::before{content:'✓';color:var(--amber);font-weight:800;flex-shrink:0;margin-top:1px}
-.plan-btn{width:100%}
-.modal-footer{text-align:center;margin-top:28px;color:var(--text-3);font-size:13px}
-
-/* ── STATS ROW ───────────────────────────────── */
-.stats-row{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:24px;margin-top:80px;
-  padding:48px 0;border-top:1px solid var(--border);
-}
-.stat-item{text-align:center}
-.stat-val{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--amber);letter-spacing:2px}
-.stat-lbl{font-size:13px;color:var(--text-3);margin-top:4px}
-
-/* ── NOT SUPPORTED BANNER ────────────────────── */
-.compat-banner{
-  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
-  border-radius:10px;padding:12px 16px;font-size:13px;
-  color:var(--red);margin-bottom:16px;display:flex;align-items:center;gap:8px;
-}
-
-/* ── RESPONSIVE ──────────────────────────────── */
-@media(max-width:900px){
-  .nav{padding:16px 20px}
-  .screen{padding:0 16px 100px}
-  .content-grid{grid-template-columns:1fr}
-  .config-layout{grid-template-columns:1fr}
-  .gen-panel{position:static}
-  .result-layout{grid-template-columns:1fr}
-  .plans-grid{grid-template-columns:1fr}
-  .bottom-bar{padding:14px 20px}
-  .modal{padding:32px 20px}
-  .stats-row{grid-template-columns:1fr;gap:32px}
+/* RESPONSIVE */
+@media(max-width:640px){
+  .nav{padding:14px 20px}
+  .hero{padding:52px 20px 40px}
+  .hero-visual{padding:0 20px 56px}
+  .hv-card{max-width:130px}
+  .how{grid-template-columns:1fr;padding:0 20px 60px}
+  .upload-screen,.proc-screen,.result-screen{padding-left:20px;padding-right:20px}
+  .type-grid{grid-template-columns:repeat(2,1fr)}
+  .fmt-row{flex-wrap:wrap}
+  .result-actions,.btn-amber,.btn-ghost{min-width:unset}
 }
 </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script type="text/babel">
 const { useState, useCallback, useRef, useEffect } = React;
 
-/* ══════════════════════════════════════════════
-   DATA
-══════════════════════════════════════════════ */
-const CONTENT_TYPES = [
-  {
-    id:'timelapse', name:'TIMELAPSE', icon:'⏱',
-    desc:'Transform your job site photos into a stunning time-progression video showing the full scope of your work from start to finish.',
-    badge:'Most Popular', badgeClass:'card-badge-amber',
-    formats:['Reel','TikTok','YouTube Shorts'],
-    gradient:'linear-gradient(135deg,#F59E0B,#EF4444)',
-    type:'video'
-  },
-  {
-    id:'sizzle', name:'SIZZLE REEL', icon:'🎬',
-    desc:'Cinematic showcase of your best completed projects with Ken Burns effects — perfect for client presentations and winning new bids.',
-    badge:'Client Favorite', badgeClass:'card-badge-blue',
-    formats:['Instagram','LinkedIn','YouTube'],
-    gradient:'linear-gradient(135deg,#6366F1,#3B82F6)',
-    type:'video'
-  },
-  {
-    id:'graded', name:'GRADED PHOTOS', icon:'📷',
-    desc:'Professional color correction applied instantly to all your job site photos. Look like you hired a $500/day photographer.',
-    badge:null, badgeClass:'',
-    formats:['Instagram Post','Carousel','Print'],
-    gradient:'linear-gradient(135deg,#10B981,#3B82F6)',
-    type:'photos'
-  },
-  {
-    id:'looks', name:'PROJECT LOOKS', icon:'🏗',
-    desc:"Show clients what their finished project could look like before work begins. Cinematic filters that make raw photos look done.",
-    badge:'New', badgeClass:'card-badge-purple',
-    formats:['Client Decks','Email','Instagram'],
-    gradient:'linear-gradient(135deg,#8B5CF6,#EC4899)',
-    type:'photos'
-  },
-  {
-    id:'presentation', name:'PRESENTATION', icon:'📊',
-    desc:'Auto-generated client-ready project presentations. Upload your photos and get a polished video presentation in minutes.',
-    badge:null, badgeClass:'',
-    formats:['PDF Export','Slideshow','Print'],
-    gradient:'linear-gradient(135deg,#F59E0B,#10B981)',
-    type:'video'
-  },
-];
-
-const GRADES = [
-  { id:'golden', name:'Golden Hour', tag:'Warm & inviting', css:'linear-gradient(135deg,#B45309,#F59E0B,#FCD34D)' },
-  { id:'steel',  name:'Steel City',  tag:'Cool & sharp',   css:'linear-gradient(135deg,#1e3a5f,#2563EB,#60A5FA)' },
-  { id:'cinema', name:'Cinematic',   tag:'Teal & orange',  css:'linear-gradient(135deg,#064e3b,#059669,#F59E0B)' },
-  { id:'hdr',    name:'HDR Pro',     tag:'Maximum impact', css:'linear-gradient(135deg,#3B0764,#7C3AED,#A78BFA)' },
-  { id:'clean',  name:'Clean White', tag:'Bright & fresh', css:'linear-gradient(135deg,#374151,#9CA3AF,#E5E7EB)' },
-];
-
-const PLATFORMS = [
-  { id:'ig_post',  name:'Instagram Post',    w:1080, h:1080, icon:'📸', aspect:'1:1'   },
-  { id:'ig_reel',  name:'Instagram Reel',    w:1080, h:1920, icon:'🎞', aspect:'9:16'  },
-  { id:'tiktok',   name:'TikTok',            w:1080, h:1920, icon:'🎵', aspect:'9:16'  },
-  { id:'linkedin', name:'LinkedIn',          w:1920, h:1080, icon:'💼', aspect:'16:9'  },
-  { id:'yt',       name:'YouTube Shorts',    w:1080, h:1920, icon:'▶',  aspect:'9:16'  },
-];
-
-const PLANS = [
-  {
-    id:'starter', name:'STARTER', price:10, videos:10, pop:false, color:'#3B82F6',
-    features:['10 videos per month','All 5 content types','HD quality export','All social platforms','Email support']
-  },
-  {
-    id:'pro', name:'PRO', price:30, videos:50, pop:true, color:'#F59E0B',
-    features:['50 videos per month','All 5 content types','4K quality export','All social platforms','Custom branding & logo','Priority processing','Batch download']
-  },
-  {
-    id:'studio', name:'STUDIO', price:50, videos:150, pop:false, color:'#10B981',
-    features:['150 videos per month','All 5 content types','4K quality export','All social platforms','Custom branding & logo','White label option','Team accounts (3 seats)','Dedicated support line']
-  },
-];
-
+/* ─── Constants ──────────────────────────────────────────── */
 const FREE_LIMIT = 3;
 
-/* ══════════════════════════════════════════════
-   IMAGE PROCESSING ENGINE
-══════════════════════════════════════════════ */
-function applyGrade(data, id) {
-  for (let i = 0; i < data.length; i += 4) {
-    let r = data[i], g = data[i+1], b = data[i+2];
-    if (id === 'golden') {
-      r = Math.min(255, r*1.18+14); g = Math.min(255, g*1.05+4); b = Math.max(0, b*0.74);
-    } else if (id === 'steel') {
-      const lum = 0.299*r+0.587*g+0.114*b;
-      r = Math.min(255, lum*0.42+r*0.65); g = Math.min(255, lum*0.45+g*0.65); b = Math.min(255, lum*0.38+b*0.88+24);
-    } else if (id === 'cinema') {
-      r = Math.min(255, r*1.14+10); g = Math.min(255, g*0.93-2); b = Math.max(0, Math.min(255, b*0.8+18));
-      r = Math.min(255, r+Math.max(0,(42-r)*0.28)); b = Math.min(255, b+Math.max(0,(42-b)*0.42));
-    } else if (id === 'hdr') {
-      const avg = (r+g+b)/3;
-      r = Math.min(255, r+(r-avg)*0.38); g = Math.min(255, g+(g-avg)*0.38); b = Math.min(255, b+(b-avg)*0.38);
-      const sig = v => Math.min(255, Math.max(0, 255/(1+Math.exp(-(v-128)/36))));
-      r = sig(r); g = sig(g); b = sig(b);
-    } else if (id === 'clean') {
-      r = Math.min(255, r*1.07+12); g = Math.min(255, g*1.07+12); b = Math.min(255, b*1.09+14);
-    }
-    data[i]=r; data[i+1]=g; data[i+2]=b;
-  }
-}
+const PROJECT_TYPES = [
+  'Residential Build', 'Commercial Build', 'Renovation',
+  'Road / Infrastructure', 'Interior Remodel', 'Landscaping',
+];
 
-function coverFit(imgW, imgH, cW, cH) {
-  const ir = imgW/imgH, cr = cW/cH;
-  let dw, dh, dx, dy;
-  if (ir > cr) { dh=cH; dw=dh*ir; dx=(cW-dw)/2; dy=0; }
-  else          { dw=cW; dh=dw/ir; dx=0; dy=(cH-dh)/2; }
-  return {dw,dh,dx,dy};
-}
+const FORMATS = [
+  { id:'tiktok',     label:'TikTok / Reels', icon:'📱', aspect:'9:16'  },
+  { id:'landscape',  label:'YouTube / X',    icon:'🖥️',  aspect:'16:9' },
+  { id:'square',     label:'Instagram Feed', icon:'⬛', aspect:'1:1'  },
+];
 
-async function processPhoto(imgEl, gradeId, pw, ph) {
-  const c = document.createElement('canvas');
-  c.width=pw; c.height=ph;
-  const ctx = c.getContext('2d');
-  const {dw,dh,dx,dy} = coverFit(imgEl.naturalWidth, imgEl.naturalHeight, pw, ph);
-  ctx.fillStyle='#080909'; ctx.fillRect(0,0,pw,ph);
-  ctx.drawImage(imgEl,dx,dy,dw,dh);
-  if (gradeId) { const id=ctx.getImageData(0,0,pw,ph); applyGrade(id.data,gradeId); ctx.putImageData(id,0,0); }
-  return c.toDataURL('image/jpeg',0.92);
-}
+const STEPS = [
+  'Analyzing your photos',
+  'Connecting to Kling AI',
+  'AI generating transformation',
+  'Finalizing video',
+];
 
-function getBestMimeType() {
-  const types = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
-  return types.find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
-}
+/* ─── Utilities ──────────────────────────────────────────── */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// Resize image for AI API — keeps payload small and fast
-async function resizeForAI(imgEl, maxW=1024, maxH=576) {
-  const ratio = Math.min(maxW/imgEl.naturalWidth, maxH/imgEl.naturalHeight, 1);
-  const c = document.createElement('canvas');
-  c.width  = Math.round(imgEl.naturalWidth  * ratio);
-  c.height = Math.round(imgEl.naturalHeight * ratio);
-  c.getContext('2d').drawImage(imgEl, 0, 0, c.width, c.height);
-  return c.toDataURL('image/jpeg', 0.82);
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x,y,w,h,r); return; }
-  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
-}
-
-function analyzeProjectType(imgEls) {
-  const samples = Math.min(3, imgEls.length);
-  let tR=0, tG=0, tB=0;
-  for (let i=0; i<samples; i++) {
-    const img = imgEls[i];
-    const tc = document.createElement('canvas'); tc.width=60; tc.height=45;
-    const tctx = tc.getContext('2d'); tctx.drawImage(img,0,0,60,45);
-    const d = tctx.getImageData(0,0,60,45).data;
-    for (let p=0;p<d.length;p+=4){ tR+=d[p]; tG+=d[p+1]; tB+=d[p+2]; }
-  }
-  const px=samples*60*45, r=tR/px, g=tG/px, b=tB/px;
-  const brightness=(r+g+b)/3, warmth=r-b;
-  if (warmth>28 && brightness>90)  return {type:'RESIDENTIAL BUILD',    phases:['SITE PREP','FOUNDATION','FRAMING','ROUGH-IN','DRYWALL','COMPLETION']};
-  if (warmth<8  && brightness<115) return {type:'COMMERCIAL PROJECT',   phases:['SITE PREP','FOUNDATION','STRUCTURAL','CONCRETE POUR','MECHANICAL','FINISHING']};
-  if (brightness<75)               return {type:'EXCAVATION PROJECT',   phases:['CLEARING','EXCAVATION','GRADING','DRAINAGE','UTILITY WORK','COMPLETION']};
-  return                                  {type:'CONSTRUCTION PROJECT', phases:['SITE PREP','FOUNDATION','FRAMING','ROUGH-IN','FINISHING','COMPLETION']};
-}
-
-function getPhaseLabel(imgIdx, totalImgs, projectInfo) {
-  const phases = projectInfo.phases;
-  const idx = Math.min(Math.floor((imgIdx/totalImgs)*phases.length), phases.length-1);
-  const day = Math.round((imgIdx/Math.max(totalImgs-1,1))*180)+1;
-  return { phase: phases[idx], day };
-}
-
-/* ══════════════════════════════════════════════
-   VIRAL TIMELAPSE RENDERER
-   Fast cuts · dramatic zoom · flash transitions
-   DAY counter · phase labels · COMPLETE reveal
-══════════════════════════════════════════════ */
-async function renderTimelapse(imgEls, gradeId, platform, onProgress, projectInfo) {
+function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
-    const scale = 0.75;
-    const pw = Math.round(Math.min(platform.w, 1080) * scale);
-    const ph = Math.round(pw * platform.h / platform.w);
-    const c = document.createElement('canvas');
-    c.width = pw; c.height = ph;
-    const ctx = c.getContext('2d');
+    const reader = new FileReader();
+    reader.onload  = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
-    if (typeof MediaRecorder === 'undefined') {
-      reject(new Error('MediaRecorder not supported. Please use Chrome or Firefox.'));
-      return;
-    }
-
-    const mimeType = getBestMimeType();
-    const chunks = [];
-    const fps = 30;
-    const framesPerImg = 45;   // 1.5s per photo at 30fps
-    const flashFrames = 3;     // white flash frames between clips
-
-    const stream = c.captureStream(fps);
-    const rec = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8000000 });
-    rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-    rec.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
-    rec.onerror = e => reject(e.error);
-    rec.start(200);
-
-    const totalImgs = imgEls.length;
-    let imgIdx = 0;
-    let frameInClip = 0;
-
-    const drawFrame = () => {
-      if (imgIdx >= totalImgs) { setTimeout(() => rec.stop(), 1000); return; }
-
-      const img = imgEls[imgIdx];
-      const t = frameInClip / framesPerImg;          // 0 → 1 within clip
-      const isLast  = imgIdx === totalImgs - 1;
-      const isFirst = imgIdx === 0;
-
-      // Cover-fit the image to canvas
-      const { dw, dh, dx, dy } = coverFit(img.naturalWidth, img.naturalHeight, pw, ph);
-
-      // Dramatic zoom: 1.00 → 1.20, alternating left/right drift
-      const zoom      = 1.0 + t * 0.20;
-      const driftDir  = imgIdx % 2 === 0 ? 1 : -1;
-      const ox        = driftDir * t * pw * 0.03;
-
-      // ── Draw photo ──────────────────────────────
-      ctx.fillStyle = '#080909';
-      ctx.fillRect(0, 0, pw, ph);
-      ctx.save();
-      ctx.translate(pw / 2 + ox, ph / 2);
-      ctx.scale(zoom, zoom);
-      ctx.translate(-pw / 2, -ph / 2);
-      ctx.drawImage(img, dx, dy, dw, dh);
-      ctx.restore();
-
-      // Color grade
-      if (gradeId) {
-        const id = ctx.getImageData(0, 0, pw, ph);
-        applyGrade(id.data, gradeId);
-        ctx.putImageData(id, 0, 0);
-      }
-
-      // ── HUD Overlays ────────────────────────────
-      if (projectInfo) {
-        const lbl = getPhaseLabel(imgIdx, totalImgs, projectInfo);
-
-        // Bottom progress bar (amber)
-        const progPct = (imgIdx + t) / totalImgs;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, ph - 6, pw, 6);
-        ctx.fillStyle = '#F59E0B';
-        ctx.fillRect(0, ph - 6, pw * progPct, 6);
-
-        // Lower-third gradient
-        const lthH = Math.round(ph * 0.23);
-        const lthY = ph - lthH - 6;
-        const grad = ctx.createLinearGradient(0, lthY, 0, ph - 6);
-        grad.addColorStop(0,   'rgba(0,0,0,0)');
-        grad.addColorStop(0.4, 'rgba(0,0,0,0.72)');
-        grad.addColorStop(1,   'rgba(0,0,0,0.90)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, lthY, pw, lthH);
-
-        // Amber accent bar
-        ctx.fillStyle = '#F59E0B';
-        ctx.fillRect(0, lthY + Math.round(lthH * 0.18), 5, Math.round(lthH * 0.64));
-
-        // Phase label
-        const fs = Math.max(13, Math.round(pw * 0.027));
-        ctx.save();
-        ctx.font = `700 ${fs}px Inter, Arial, sans-serif`;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 4;
-        ctx.fillText(lbl.phase, 20, lthY + lthH * 0.44);
-        ctx.shadowBlur = 0;
-        ctx.restore();
-
-        // DAY counter — bold, amber, top right
-        const dayStr = `DAY ${lbl.day}`;
-        const dayFs  = Math.max(18, Math.round(pw * 0.054));
-        ctx.save();
-        ctx.font = `900 ${dayFs}px Inter, "Arial Black", sans-serif`;
-        ctx.textAlign    = 'right';
-        ctx.textBaseline = 'top';
-        ctx.shadowColor  = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 10;
-        ctx.fillStyle    = '#F59E0B';
-        ctx.fillText(dayStr, pw - 16, 16);
-        ctx.shadowBlur = 0;
-        ctx.restore();
-
-        // Project type badge — top left, first clip only
-        if (isFirst) {
-          const ptFs   = Math.max(11, Math.round(pw * 0.021));
-          const ptText = projectInfo.type.toUpperCase();
-          ctx.save();
-          ctx.font = `800 ${ptFs}px Inter, Arial, sans-serif`;
-          const ptW = ctx.measureText(ptText).width + 24;
-          const ptH = ptFs + 14;
-          ctx.fillStyle = '#F59E0B';
-          roundRect(ctx, 14, 14, ptW, ptH, 4); ctx.fill();
-          ctx.fillStyle    = '#000000';
-          ctx.textAlign    = 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(ptText, 26, 14 + ptH / 2);
-          ctx.restore();
-        }
-
-        // "COMPLETE" reveal — last clip, after 55% of clip
-        if (isLast && t >= 0.55) {
-          const revT  = (t - 0.55) / 0.45;
-          const alpha = Math.min(1, revT * 2.2);
-
-          // Darken frame for readability
-          ctx.fillStyle = `rgba(0,0,0,${0.38 * alpha})`;
-          ctx.fillRect(0, 0, pw, ph);
-
-          const cFs = Math.max(28, Math.round(pw * 0.11));
-          ctx.save();
-          ctx.textAlign    = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor  = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 24;
-
-          // Amber drop-shadow layer
-          ctx.font      = `900 ${cFs}px Inter, "Arial Black", sans-serif`;
-          ctx.fillStyle = `rgba(245,158,11,${alpha})`;
-          ctx.fillText('COMPLETE', pw / 2 + 3, ph / 2 + 3);
-          // White top layer
-          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-          ctx.fillText('COMPLETE', pw / 2, ph / 2);
-          ctx.shadowBlur = 0;
-
-          // Sub-label: project type
-          const subFs = Math.max(11, Math.round(pw * 0.030));
-          ctx.font      = `600 ${subFs}px Inter, Arial, sans-serif`;
-          ctx.fillStyle = `rgba(245,158,11,${alpha * 0.9})`;
-          ctx.letterSpacing = '0.12em';
-          ctx.fillText(projectInfo.type.toUpperCase(), pw / 2, ph / 2 + cFs * 0.74);
-          ctx.restore();
-        }
-      }
-
-      // White flash at start of each clip (except first)
-      if (!isFirst && frameInClip < flashFrames) {
-        const fa = (1 - frameInClip / flashFrames) * 0.88;
-        ctx.fillStyle = `rgba(255,255,255,${fa})`;
-        ctx.fillRect(0, 0, pw, ph);
-      }
-
-      // Advance counters
-      frameInClip++;
-      if (frameInClip >= framesPerImg) {
-        imgIdx++;
-        frameInClip = 0;
-        onProgress && onProgress(imgIdx / totalImgs);
-      }
-
-      if (imgIdx < totalImgs) requestAnimationFrame(drawFrame);
-      else setTimeout(() => rec.stop(), 1200);
+async function resizeImage(dataUrl, maxDim = 1024) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale  = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.round(img.width  * scale);
+      const h = Math.round(img.height * scale);
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL('image/jpeg', 0.82));
     };
-
-    requestAnimationFrame(drawFrame);
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
   });
 }
 
-async function renderVideo(imgEls, gradeId, platform, durationSec, mode, onProgress, projectInfo) {
-  return new Promise((resolve, reject) => {
-    const scale = 0.75;
-    const pw = Math.round(Math.min(platform.w, 1080)*scale);
-    const ph = Math.round(pw * platform.h / platform.w);
-    const c = document.createElement('canvas');
-    c.width=pw; c.height=ph;
-    const ctx = c.getContext('2d');
-
-    if (typeof MediaRecorder === 'undefined') {
-      reject(new Error('MediaRecorder not supported in this browser. Please use Chrome or Firefox.'));
-      return;
-    }
-
-    const mimeType = getBestMimeType();
-    const chunks = [];
-    const stream = c.captureStream(24);
-    const rec = new MediaRecorder(stream, {mimeType, videoBitsPerSecond:5000000});
-    rec.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
-    rec.onstop = () => resolve(new Blob(chunks,{type:'video/webm'}));
-    rec.onerror = e => reject(e.error);
-    rec.start(200);
-
-    const fps = 24;
-    const secPerImg = durationSec / imgEls.length;
-    const framesPerImg = Math.max(fps, Math.ceil(fps*secPerImg));
-    const effects = ['zoom-in','zoom-out','pan-right','pan-left','zoom-in'];
-    let imgIdx=0, frame=0;
-
-    const tick = () => {
-      if (imgIdx >= imgEls.length) { setTimeout(()=>rec.stop(), 500); return; }
-      const img = imgEls[imgIdx];
-      const t = (frame % framesPerImg) / framesPerImg;
-      const frameInImg = frame % framesPerImg;
-      const eff = mode==='timelapse' ? (imgIdx%2===0?'zoom-in':'zoom-out') : effects[imgIdx%effects.length];
-      const {dw,dh,dx,dy} = coverFit(img.naturalWidth, img.naturalHeight, pw, ph);
-
-      let extraScale=1, ox=0, oy=0;
-      if (eff==='zoom-in')   extraScale = 1.04+t*0.08;
-      else if (eff==='zoom-out') extraScale = 1.12-t*0.08;
-      else if (eff==='pan-right') { extraScale=1.1; ox=(t-0.5)*pw*0.07; }
-      else { extraScale=1.1; ox=-(t-0.5)*pw*0.07; }
-
-      // Subtle brightness flicker simulates time-of-day changes
-      const flicker = mode==='timelapse' ? (0.92+Math.sin(frame*0.41)*0.08) : 1;
-
-      ctx.fillStyle='#080909'; ctx.fillRect(0,0,pw,ph);
-      ctx.save();
-      ctx.translate(pw/2+ox, ph/2+oy);
-      ctx.scale(extraScale, extraScale);
-      ctx.translate(-pw/2, -ph/2);
-      ctx.globalAlpha = flicker;
-      ctx.drawImage(img,dx,dy,dw,dh);
-      ctx.globalAlpha = 1;
-      ctx.restore();
-
-      if (gradeId) { const id=ctx.getImageData(0,0,pw,ph); applyGrade(id.data,gradeId); ctx.putImageData(id,0,0); }
-
-      // ── Timelapse HUD overlays ─────────────────────────────
-      if (mode==='timelapse' && projectInfo) {
-        const lbl = getPhaseLabel(imgIdx, imgEls.length, projectInfo);
-        const fs = Math.max(13, Math.round(pw*0.026));
-
-        // Day counter pill — top right
-        const dayStr = `DAY ${lbl.day}`;
-        ctx.save();
-        ctx.font = `700 ${fs}px Inter, Arial, sans-serif`;
-        const dtw = ctx.measureText(dayStr).width;
-        const dp=10, dW=dtw+dp*2+8, dH=fs+14, dX=pw-dW-14, dY=14;
-        ctx.fillStyle='rgba(0,0,0,0.62)';
-        roundRect(ctx,dX,dY,dW,dH,5); ctx.fill();
-        ctx.fillStyle='#F59E0B'; ctx.textAlign='left';
-        ctx.fillText(dayStr, dX+dp, dY+dH-6);
-        ctx.restore();
-
-        // Project type badge — top left, first image only
-        if (imgIdx===0 && frameInImg < framesPerImg*0.65) {
-          ctx.save();
-          ctx.font = `700 ${Math.round(fs*0.82)}px Inter, Arial, sans-serif`;
-          const ptw = ctx.measureText(projectInfo.type).width+24;
-          ctx.fillStyle='rgba(245,158,11,0.95)';
-          roundRect(ctx,14,14,ptw,fs+12,5); ctx.fill();
-          ctx.fillStyle='#000'; ctx.textAlign='left';
-          ctx.fillText(projectInfo.type, 26, 14+fs+2);
-          ctx.restore();
-        }
-
-        // Phase label — lower third, fades in/out
-        if (frameInImg < framesPerImg*0.55) {
-          const pAlpha = Math.min(1, frameInImg/5) * (frameInImg < framesPerImg*0.42 ? 1 : Math.max(0,(framesPerImg*0.55-frameInImg)/(framesPerImg*0.13)));
-          ctx.save();
-          const bh=Math.round(ph*0.09), by=ph-bh;
-          ctx.fillStyle=`rgba(0,0,0,${0.68*pAlpha})`; ctx.fillRect(0,by,pw,bh);
-          ctx.fillStyle=`rgba(245,158,11,${pAlpha})`; ctx.fillRect(0,by,5,bh);
-          ctx.font=`700 ${Math.round(fs*1.05)}px Inter, Arial, sans-serif`;
-          ctx.fillStyle=`rgba(255,255,255,${pAlpha})`; ctx.textAlign='left';
-          ctx.fillText(lbl.phase, 20, by+bh*0.68);
-          ctx.restore();
-        }
-
-        // Flash cut at start of each new image
-        if (frameInImg < 5) {
-          ctx.fillStyle=`rgba(255,255,255,${(1-frameInImg/5)*0.65})`;
-          ctx.fillRect(0,0,pw,ph);
-        }
-      }
-
-      // Fade between clips for sizzle/presentation
-      if (mode!=='timelapse') {
-        const fadeAt = 0.84;
-        if (t > fadeAt) {
-          const a = (t-fadeAt)/(1-fadeAt);
-          ctx.fillStyle=`rgba(0,0,0,${a*0.9})`;
-          ctx.fillRect(0,0,pw,ph);
-        }
-      }
-
-      frame++;
-      if (frame % framesPerImg === 0) { imgIdx++; onProgress&&onProgress(imgIdx/imgEls.length); }
-      if (imgIdx < imgEls.length) requestAnimationFrame(tick);
-      else setTimeout(()=>rec.stop(),500);
-    };
-
-    requestAnimationFrame(tick);
+/* ─── API ────────────────────────────────────────────────── */
+async function startGeneration(before, after, projectType, aspect) {
+  const r = await fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ before, after, projectType, aspectRatio: aspect }),
   });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d.requestId;
 }
 
-/* ══════════════════════════════════════════════
-   ROOT APP
-══════════════════════════════════════════════ */
-function App() {
-  const [screen, setScreen]     = useState('home');
-  const [selType, setSelType]   = useState(null);
-  const [photos, setPhotos]     = useState([]);
-  const [imgEls, setImgEls]     = useState([]);
-  const [grade, setGrade]       = useState('golden');
-  const [platform, setPlatform] = useState(PLATFORMS[0]);
-  const [duration, setDuration] = useState(15);
-  const [progress, setProgress] = useState(0);
-  const [phase, setPhase]       = useState('');
-  const [result, setResult]     = useState(null);
-  const [showPricing, setShowPricing] = useState(false);
-  const [compatError, setCompatError] = useState('');
-  const [usageCount, setUsageCount] = useState(() => {
-    try { return parseInt(localStorage.getItem('bc_usage')||'0',10); } catch(e){return 0;}
-  });
-  const [isPro, setIsPro] = useState(() => {
-    try { return localStorage.getItem('bc_pro')==='true'; } catch(e){return false;}
-  });
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-
-  // Handle Stripe redirect back to app
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    if (p.get('success')==='true') {
-      const plan = p.get('plan') || 'starter';
-      setIsPro(true);
-      try { localStorage.setItem('bc_pro','true'); localStorage.setItem('bc_plan',plan); } catch(e){}
-      window.history.replaceState({}, '', '/');
-    }
-    if (p.get('canceled')==='true') {
-      window.history.replaceState({}, '', '/');
-    }
-  }, []);
-
-  const remaining = Math.max(0, FREE_LIMIT - usageCount);
-  const canGen = isPro || usageCount < FREE_LIMIT;
-
-  const addPhotos = useCallback((files) => {
-    [...files].forEach(file => {
-      // Use FileReader (data URL) instead of createObjectURL — universally reliable
-      // on mobile Chrome/Safari including iOS where blob URLs can silently fail.
-      // Skip the MIME type check: mobile browsers sometimes return '' for gallery photos.
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        if (!dataUrl || !dataUrl.startsWith('data:image')) return;
-        const img = new Image();
-        img.onload = () => {
-          setPhotos(p => [...p, dataUrl]);
-          setImgEls(p => [...p, img]);
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
-    });
-  }, []);
-
-  const removePhoto = (i) => {
-    setPhotos(p=>p.filter((_,idx)=>idx!==i));
-    setImgEls(p=>p.filter((_,idx)=>idx!==i));
-  };
-
-  const generate = async () => {
-    if (!canGen) { setShowPricing(true); return; }
-    setScreen('processing'); setProgress(0); setCompatError('');
-
-    try {
-      let res = null;
-      setPhase('Analyzing your project photos...');
-      await sleep(700);
-
-      if (selType.id==='timelapse' || selType.id==='sizzle' || selType.id==='presentation') {
-        const mode = selType.id==='timelapse' ? 'timelapse' : 'sizzle';
-        let projectInfo = null;
-
-        // ── Timelapse path (viral canvas renderer) ────────────
-        if (selType.id==='timelapse') {
-          setPhase('Scanning photos — identifying project type...');
-          await sleep(300);
-          projectInfo = analyzeProjectType(imgEls);
-          setPhase(`${projectInfo.type} detected — building timelapse...`);
-          await sleep(300);
-          setProgress(8);
-
-          const blob = await renderTimelapse(imgEls, grade, platform, p => {
-            setProgress(8 + p * 86);
-            if      (p < 0.3) setPhase('Fast cutting clips...');
-            else if (p < 0.7) setPhase('Rendering zoom effects...');
-            else               setPhase('Encoding timelapse...');
-          }, projectInfo);
-
-          setProgress(100);
-          await sleep(400);
-          res = { type:'video', blob, url:URL.createObjectURL(blob), filename:'buildcast_timelapse.webm' };
-
-        } else {
-          // ── Sizzle / Presentation (canvas path) ──────────────
-          setPhase(selType.id==='sizzle' ? 'Applying cinematic effects...' : 'Assembling your presentation...');
-          setProgress(8);
-          const dur = selType.id==='presentation' ? Math.max(12, imgEls.length*3) : duration;
-          const blob = await renderVideo(imgEls, grade, platform, dur, mode, p=>{
-            setProgress(8+p*82);
-            if (p<0.5) setPhase('Rendering frames with color grade...'); else setPhase('Encoding video...');
-          }, null);
-          setProgress(96); setPhase('Finalizing...');
-          await sleep(600);
-          res = { type:'video', blob, url:URL.createObjectURL(blob), filename:`buildcast_${selType.id}.webm` };
-        } // end sizzle/presentation
-
-      } else {
-        const urls = [];
-        for (let i=0; i<imgEls.length; i++) {
-          setPhase(`Grading photo ${i+1} of ${imgEls.length}...`);
-          setProgress(Math.round((i/imgEls.length)*88)+4);
-          const dataUrl = await processPhoto(imgEls[i], grade, platform.w, platform.h);
-          urls.push(dataUrl);
-          await sleep(30);
-        }
-        setProgress(96); setPhase('Packaging your photos...');
-        await sleep(700);
-        res = { type:'photos', urls, filename:'buildcast_photos' };
-      }
-
-      setProgress(100);
-      const newCount = usageCount+1;
-      setUsageCount(newCount);
-      try { localStorage.setItem('bc_usage', String(newCount)); } catch(e){}
-
-      await sleep(400);
-      setResult(res);
-      setScreen('result');
-
-    } catch(err) {
-      console.error(err);
-      setScreen('configure');
-      setCompatError(err.message || 'Processing failed. Please try again.');
-    }
-  };
-
-  const doUpgrade = async (planId) => {
-    setCheckoutLoading(true);
-    try {
-      const r = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planId })
-      });
-      const data = await r.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert('Checkout error: ' + (data.error || 'Unknown error'));
-        setCheckoutLoading(false);
-      }
-    } catch(e) {
-      alert('Could not reach checkout. Please try again.');
-      setCheckoutLoading(false);
-    }
-  };
-
-  const goHome = () => {
-    setScreen('home'); setResult(null);
-    setPhotos([]); setImgEls([]); setSelType(null);
-  };
-
-  return (
-    <div className="app">
-      <Nav
-        remaining={remaining} isPro={isPro}
-        onHome={goHome}
-        onPricing={()=>setShowPricing(true)}
-      />
-
-      <div className={`screen ${screen!=='processing'?'fade-up':''}`} key={screen}>
-        {screen==='home'       && <HomeScreen onSelect={t=>{setSelType(t);setPhotos([]);setImgEls([]);setResult(null);setScreen('upload');}} remaining={remaining} isPro={isPro} onPricing={()=>setShowPricing(true)} />}
-        {screen==='upload'     && <UploadScreen type={selType} photos={photos} onBack={()=>setScreen('home')} onNext={()=>setScreen('configure')} onAdd={addPhotos} onRemove={removePhoto} />}
-        {screen==='configure'  && <ConfigureScreen type={selType} grade={grade} setGrade={setGrade} platform={platform} setPlatform={setPlatform} duration={duration} setDuration={setDuration} onBack={()=>setScreen('upload')} onGenerate={generate} canGen={canGen} remaining={remaining} onPricing={()=>setShowPricing(true)} photoCount={photos.length} compatError={compatError} />}
-        {screen==='processing' && <ProcessingScreen progress={progress} phase={phase} type={selType} />}
-        {screen==='result'     && <ResultScreen result={result} type={selType} platform={platform} onNew={goHome} />}
-      </div>
-
-      {showPricing && <PricingModal onClose={()=>setShowPricing(false)} onUpgrade={doUpgrade} remaining={remaining} />}
-    </div>
-  );
+async function pollStatus(id) {
+  const r = await fetch(`/api/status?id=${encodeURIComponent(id)}`);
+  const d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d; // { status, videoUrl? }
 }
 
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-/* ── NAV ─────────────────────────────────────── */
-function Nav({ remaining, isPro, onHome, onPricing }) {
-  return (
-    <nav className="nav">
-      <div className="nav-logo" onClick={onHome}>
-        <span className="accent">BUILD</span><span className="rest">CAST</span>
-        <span className="nav-logo-dot"></span>
-      </div>
-      <div className="nav-right">
-        {isPro
-          ? <div className="pro-badge">★ PRO</div>
-          : <div className="usage-pill">
-              <span className={`usage-dot ${remaining>0?'green':''}`}></span>
-              {remaining>0 ? `${remaining} free video${remaining!==1?'s':''} left` : 'Free limit reached'}
-            </div>
-        }
-        {!isPro &&
-          <button className="btn btn-primary btn-sm" onClick={onPricing}>Upgrade →</button>
-        }
-      </div>
-    </nav>
-  );
-}
-
-/* ── HOME ────────────────────────────────────── */
-function HomeScreen({ onSelect, remaining, isPro, onPricing }) {
-  return (
-    <div>
-      <div className="home-hero fade-up">
-        <div className="hero-eyebrow">⚡ Built for Contractors</div>
-        <h1 className="hero-title">
-          <span className="line-1">PRO CONTENT</span>
-          <span className="line-2">IN MINUTES</span>
-        </h1>
-        <p className="hero-sub">
-          Upload your job site photos. Get professional videos and images ready for Instagram, TikTok, and client presentations — zero editing skills needed.
-        </p>
-        {!isPro && remaining===0 &&
-          <button className="btn btn-primary btn-lg" onClick={onPricing} style={{marginBottom:24}}>
-            🔓 Upgrade to Keep Creating — from $10/mo
-          </button>
-        }
-        {!isPro && remaining>0 &&
-          <div className="hero-free-label">
-            <span>{remaining} free {remaining===1?'video':'videos'} remaining</span>
-            <span style={{color:'var(--text-4)'}}>•</span>
-            <span>No credit card needed</span>
-          </div>
-        }
-      </div>
-
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}} className="fade-up-d1">
-        <p style={{color:'var(--text-2)',fontSize:14}}>What do you want to create today?</p>
-        <p style={{color:'var(--text-4)',fontSize:12}}>{CONTENT_TYPES.length} content types</p>
-      </div>
-
-      <div className="content-grid fade-up-d2">
-        {CONTENT_TYPES.map((type,i) => (
-          <div key={type.id} className="content-card" onClick={()=>onSelect(type)} style={{animationDelay:`${i*0.04}s`}}>
-            <div className="card-top">
-              <div className="card-icon-wrap" style={{background:type.gradient}}>
-                {type.icon}
-              </div>
-              {type.badge && <span className={`card-badge ${type.badgeClass}`}>{type.badge}</span>}
-            </div>
-            <div className="card-name">{type.name}</div>
-            <p className="card-desc">{type.desc}</p>
-            <div className="card-bottom">
-              <div className="card-chips">
-                {type.formats.map(f=><span key={f} className="chip">{f}</span>)}
-              </div>
-              <span className="card-arrow">↗</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="stats-row fade-up-d3">
-        {[['5 Min','Average time to pro content'],['500+','Contractors using BuildCast'],['4.9 ★','Average user rating']].map(([val,lbl])=>(
-          <div key={val} className="stat-item">
-            <div className="stat-val">{val}</div>
-            <div className="stat-lbl">{lbl}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── UPLOAD ──────────────────────────────────── */
-function UploadScreen({ type, photos, onBack, onNext, onAdd, onRemove }) {
+/* ─── UploadZone ─────────────────────────────────────────── */
+function UploadZone({ label, image, onUpload }) {
   const [drag, setDrag] = useState(false);
-  const ref = useRef();
 
-  const onDrop = useCallback(e=>{
-    e.preventDefault(); setDrag(false); onAdd(e.dataTransfer.files);
-  },[onAdd]);
+  const handleFiles = async files => {
+    const file = files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      onUpload(dataUrl);
+    } catch(e) { console.error('File read error:', e); }
+  };
 
   return (
-    <div>
-      <div className="screen-header">
-        <button className="back-btn" onClick={onBack}>← Back</button>
-        <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:6}}>
-          <div style={{width:46,height:46,borderRadius:12,background:type.gradient,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexShrink:0}}>{type.icon}</div>
-          <div>
-            <h1 className="screen-title">{type.name}</h1>
-            <p className="screen-sub">Upload your job site photos to get started</p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={`upload-zone ${drag?'drag-over':''}`}
-        onDragOver={e=>{e.preventDefault();setDrag(true)}}
-        onDragLeave={()=>setDrag(false)}
-        onDrop={onDrop}
-      >
-        <input ref={ref} type="file" accept="image/*,image/heic,image/heif" multiple
-          style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',width:'100%',height:'100%',zIndex:10}}
-          onChange={e=>onAdd(e.target.files)} />
-        <div className="upload-float">📸</div>
-        <div className="upload-title">DROP YOUR PHOTOS HERE</div>
-        <p className="upload-sub">Or click anywhere to browse</p>
-        <p className="upload-hint" style={{marginTop:8}}>JPG · PNG · HEIC · WebP supported &nbsp;·&nbsp; Upload as many as you want</p>
-      </div>
-
-      {photos.length > 0 && (
-        <div style={{marginTop:22}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <p style={{fontSize:14,fontWeight:600}}>{photos.length} photo{photos.length!==1?'s':''} selected</p>
-            <button className="btn btn-ghost btn-sm" onClick={e=>{e.stopPropagation();ref.current?.click()}}>+ Add More</button>
-          </div>
-          <div className="photo-grid">
-            {photos.map((url,i)=>(
-              <div key={i} className="photo-thumb">
-                <img src={url} alt="" />
-                <button className="photo-remove" onClick={e=>{e.stopPropagation();onRemove(i)}}>✕</button>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div
+      className={`upload-zone${drag ? ' drag-over' : ''}`}
+      onDragOver={e => { e.preventDefault(); setDrag(true); }}
+      onDragLeave={() => setDrag(false)}
+      onDrop={e => { e.preventDefault(); setDrag(false); handleFiles(e.dataTransfer.files); }}
+    >
+      <input
+        type="file"
+        accept="image/*,image/heic,image/heif"
+        onChange={e => handleFiles(e.target.files)}
+      />
+      <div className={`uz-tag ${label.toLowerCase()}`}>{label}</div>
+      {image ? (
+        <>
+          <img src={image} className="uz-thumb" alt={label} />
+          <div className="uz-check">✓</div>
+          <div className="uz-replace">Tap to replace</div>
+        </>
+      ) : (
+        <>
+          <div className="uz-icon">{label === 'BEFORE' ? '📷' : '🏗️'}</div>
+          <div className="uz-hint">{label === 'BEFORE' ? 'Day one on site' : 'Completed project'}</div>
+        </>
       )}
+    </div>
+  );
+}
 
-      <div className="bottom-bar">
-        <span className="bottom-left">
-          {photos.length>0 ? <><strong>{photos.length}</strong> photo{photos.length!==1?'s':''} ready</> : 'No photos selected yet'}
-        </span>
-        <button className="btn btn-primary btn-lg" onClick={onNext} disabled={photos.length===0}>
-          Continue — Configure →
+/* ─── HomeScreen ─────────────────────────────────────────── */
+function HomeScreen({ onStart }) {
+  return (
+    <div className="home fade-in">
+      <div className="hero">
+        <div className="hero-badge fade-up">
+          <span className="hero-badge-dot" />
+          AI Construction Timelapse Generator
+        </div>
+        <h1 className="hero-title fade-up-1">
+          TWO PHOTOS.<br /><span className="hero-em">ONE VIRAL VIDEO.</span>
+        </h1>
+        <p className="hero-sub fade-up-2">
+          Upload a before and after shot. BuildCast uses Kling AI to generate a
+          cinematic construction timelapse — download-ready for TikTok, Reels, and Instagram.
+        </p>
+        <button className="hero-cta fade-up-3" onClick={onStart}>
+          Create Your Timelapse
+          <span className="hero-arrow">→</span>
         </button>
       </div>
-    </div>
-  );
-}
 
-/* ── CONFIGURE ───────────────────────────────── */
-function ConfigureScreen({ type, grade, setGrade, platform, setPlatform, duration, setDuration, onBack, onGenerate, canGen, remaining, onPricing, photoCount, compatError }) {
-  const isVideo = type.type==='video';
-  const selGrade = GRADES.find(g=>g.id===grade);
-
-  const aspectRatio = platform.h/platform.w;
-  const previewH = aspectRatio > 1 ? 160 : aspectRatio < 1 ? 90 : 120;
-
-  return (
-    <div>
-      <div className="screen-header">
-        <button className="back-btn" onClick={onBack}>← Back</button>
-        <h1 className="screen-title">CONFIGURE</h1>
-        <p className="screen-sub">Choose your color grade, output format, and settings</p>
+      <div className="hero-visual fade-in">
+        <div className="hv-card hv-before">
+          <div className="hv-grid" />
+          <div className="hv-label">BEFORE</div>
+        </div>
+        <div className="hv-mid">
+          <div className="hv-line" />
+          <div className="hv-ai-bubble">AI</div>
+          <div className="hv-line" />
+        </div>
+        <div className="hv-card hv-after">
+          <div className="hv-grid" />
+          <div className="hv-label">AFTER</div>
+        </div>
       </div>
 
-      {compatError && (
-        <div className="compat-banner">
-          ⚠ {compatError}
-        </div>
-      )}
-
-      <div className="config-layout">
-        <div>
-          {/* Color Grade */}
-          <div>
-            <div className="config-label">
-              <span>COLOR GRADE</span>
-              <span style={{fontSize:13,color:'var(--amber)',fontFamily:'Inter',fontWeight:600,letterSpacing:0}}>{selGrade?.name}</span>
-            </div>
-            <div className="grade-grid">
-              {GRADES.map(g=>(
-                <div key={g.id} className={`grade-card ${grade===g.id?'sel':''}`} onClick={()=>setGrade(g.id)}>
-                  <div className="grade-check">✓</div>
-                  <div className="grade-swatch" style={{background:g.css}}></div>
-                  <div className="grade-name">{g.name}</div>
-                  <div className="grade-tag">{g.tag}</div>
-                </div>
-              ))}
-            </div>
+      <div className="how">
+        {[
+          { num:'01', icon:'📷', title:'Upload your before photo', desc:'Day one on site — empty lot, demo start, pre-construction.' },
+          { num:'02', icon:'🏗️', title:'Upload your after photo',  desc:'The finished project — final walkthrough, client handoff, reveal shot.' },
+          { num:'03', icon:'🎬', title:'AI generates the rest',    desc:'Kling AI fills in the transformation. You get a download-ready video in 60–120 seconds.' },
+        ].map((s, i) => (
+          <div key={s.num} className={`how-card fade-up-${i}`}>
+            <div className="how-icon">{s.icon}</div>
+            <div className="how-num">{s.num}</div>
+            <div className="how-title">{s.title}</div>
+            <div className="how-desc">{s.desc}</div>
           </div>
-
-          {/* Platform */}
-          <div>
-            <div className="config-label">OUTPUT FORMAT</div>
-            <div className="platform-grid">
-              {PLATFORMS.map(pl=>(
-                <div key={pl.id} className={`platform-card ${platform.id===pl.id?'sel':''}`} onClick={()=>setPlatform(pl)}>
-                  <div className="platform-icon">{pl.icon}</div>
-                  <div className="platform-name">{pl.name}</div>
-                  <div className="platform-aspect">{pl.aspect} &nbsp;·&nbsp; {pl.w}×{pl.h}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Duration */}
-          {isVideo && (
-            <div>
-              <div className="config-label">
-                <span>VIDEO DURATION</span>
-                <span style={{fontSize:16,color:'var(--amber)',fontFamily:'monospace',fontWeight:700}}>{duration}s</span>
-              </div>
-              <div className="range-wrap">
-                <input
-                  type="range" className="range-track"
-                  min={5} max={60} step={5} value={duration}
-                  onChange={e=>setDuration(Number(e.target.value))}
-                />
-                <div className="range-labels">
-                  {[5,15,30,45,60].map(v=><span key={v}>{v}s</span>)}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Generate Panel */}
-        <div>
-          <div className="gen-panel">
-            <div className="gen-preview" style={{paddingBottom:`${aspectRatio*100}%`,maxHeight:200,overflow:'hidden'}}>
-              <div style={{position:'absolute',inset:0}} className="gen-preview-inner">
-                <span style={{fontSize:32}}>{type.icon}</span>
-                <span style={{fontFamily:"'Bebas Neue'",fontSize:20,letterSpacing:2,color:'var(--text-3)'}}>{platform.aspect}</span>
-              </div>
-            </div>
-
-            <div className="gen-meta" style={{marginTop:16}}>
-              <div className="gen-meta-row">
-                <span className="gen-meta-label">Content type</span>
-                <span className="gen-meta-value">{type.name}</span>
-              </div>
-              <div className="gen-meta-row">
-                <span className="gen-meta-label">Photos</span>
-                <span className="gen-meta-value">{photoCount} uploaded</span>
-              </div>
-              <div className="gen-meta-row">
-                <span className="gen-meta-label">Grade</span>
-                <span className="gen-meta-value">{selGrade?.name}</span>
-              </div>
-              <div className="gen-meta-row">
-                <span className="gen-meta-label">Platform</span>
-                <span className="gen-meta-value">{platform.name}</span>
-              </div>
-              {isVideo && (
-                <div className="gen-meta-row">
-                  <span className="gen-meta-label">Duration</span>
-                  <span className="gen-meta-value">{duration} seconds</span>
-                </div>
-              )}
-            </div>
-
-            {canGen ? (
-              <>
-                <button className="btn btn-primary btn-xl" style={{width:'100%'}} onClick={onGenerate}>
-                  GENERATE
-                </button>
-                {remaining>0 && !localStorage.getItem('bc_pro') &&
-                  <p style={{textAlign:'center',fontSize:11,color:'var(--text-3)',marginTop:10}}>
-                    {remaining} free video{remaining!==1?'s':''} remaining after this
-                  </p>
-                }
-              </>
-            ) : (
-              <div>
-                <div className="paywall-note">
-                  <p style={{fontSize:13,fontWeight:600,color:'var(--amber)',marginBottom:4}}>Free limit reached</p>
-                  <p style={{fontSize:12,color:'var(--text-2)'}}>You've used all 3 free videos</p>
-                </div>
-                <button className="btn btn-primary btn-lg" style={{width:'100%'}} onClick={onPricing}>
-                  🔓 Unlock — from $10/mo
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ── PROCESSING ──────────────────────────────── */
-function ProcessingScreen({ progress, phase, type }) {
-  return (
-    <div className="processing-wrap">
-      <div className="proc-ring-wrap">
-        <div className="proc-ring"></div>
-        <div className="proc-ring-inner"></div>
-        <div className="proc-emoji">{type?.icon||'⚙'}</div>
-      </div>
+/* ─── UploadScreen ───────────────────────────────────────── */
+function UploadScreen({ onGenerate, error }) {
+  const [before, setBefore]     = useState(null);
+  const [after,  setAfter]      = useState(null);
+  const [projType, setProjType] = useState('Residential Build');
+  const [fmt, setFmt]           = useState(FORMATS[0]);
+  const canGen = before && after;
 
-      <h2 className="proc-title">GENERATING</h2>
-      <p className="proc-phase">{phase||'Working on your content...'}</p>
-
-      <div className="progress-bar">
-        <div className="progress-fill" style={{width:`${progress}%`}}></div>
-      </div>
-      <div className="progress-pct">{Math.round(progress)}%</div>
-
-      <p className="proc-tip">
-        We're turning your job site photos into professional content ready for Instagram, TikTok, and your next client pitch. This usually takes 20–60 seconds.
-      </p>
-    </div>
-  );
-}
-
-/* ── RESULT ──────────────────────────────────── */
-function AITimelapsePlayer({ result }) {
-  const [idx, setIdx] = React.useState(0);
-  const vidRef = React.useRef();
-  const urls = result.urls;
-  const lbl = result.projectInfo ? result.projectInfo.phases[
-    Math.min(Math.floor((idx/urls.length)*result.projectInfo.phases.length), result.projectInfo.phases.length-1)
-  ] : '';
-
-  const advance = () => {
-    if (idx < urls.length-1) { setIdx(i=>i+1); }
-    else { setIdx(0); }
+  const handleGenerate = async () => {
+    if (!canGen) return;
+    const [rb, ra] = await Promise.all([
+      resizeImage(before, 1024),
+      resizeImage(after,  1024),
+    ]);
+    onGenerate(rb, ra, projType, fmt.aspect, fmt);
   };
 
-  React.useEffect(() => {
-    if (vidRef.current) { vidRef.current.load(); vidRef.current.play().catch(()=>{}); }
-  }, [idx]);
-
   return (
-    <div style={{position:'relative',background:'#000',borderRadius:12,overflow:'hidden'}}>
-      <video ref={vidRef} src={urls[idx]} style={{width:'100%',display:'block',maxHeight:520,objectFit:'contain'}}
-        onEnded={advance} autoPlay muted playsInline />
-      {/* Phase label overlay */}
-      <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'10px 14px',
-        background:'linear-gradient(transparent,rgba(0,0,0,0.75))',display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:11,color:'#F59E0B',fontWeight:700,letterSpacing:2,marginBottom:3}}>{result.projectInfo?.type}</div>
-          <div style={{fontSize:15,color:'#fff',fontWeight:700,letterSpacing:1}}>{lbl}</div>
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:8}}>
-          {urls.map((_,i)=>(
-            <button key={i} onClick={()=>setIdx(i)}
-              style={{width:8,height:8,borderRadius:'50%',border:'none',cursor:'pointer',
-                background:i===idx?'#F59E0B':'rgba(255,255,255,0.35)',padding:0}} />
+    <div className="upload-screen fade-in">
+      <h1 className="screen-h1">Upload Your Photos</h1>
+      <p className="screen-sub">Before and after — that&apos;s all you need.</p>
+
+      <div className="upload-pair">
+        <UploadZone label="BEFORE" image={before} onUpload={setBefore} />
+        <UploadZone label="AFTER"  image={after}  onUpload={setAfter}  />
+      </div>
+
+      <div className="cfg-section">
+        <div className="cfg-label">Project Type</div>
+        <div className="type-grid">
+          {PROJECT_TYPES.map(t => (
+            <div key={t} className={`type-pill${projType === t ? ' sel' : ''}`} onClick={() => setProjType(t)}>{t}</div>
           ))}
         </div>
       </div>
-    </div>
-  );
-}
 
-function ResultScreen({ result, type, platform, onNew }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  if (!result) return null;
-
-  const isAITimelapse = result.type==='ai-timelapse';
-  const isVideo = result.type==='video';
-  const tipMap = {
-    ig_reel: "Add a trending audio track in Instagram before posting — Reels with popular audio get 4–6× more reach.",
-    tiktok: "Construction timelapse content is huge on TikTok right now. Post during 7–9am or 6–8pm for max views.",
-    linkedin: "LinkedIn video gets 5× more comments than static posts. Add a caption about project scope and timeline.",
-    ig_post: "Use hashtags like #construction #contractor #buildingpro to reach homeowners actively searching for your services.",
-    yt: "YouTube Shorts under 60s get prioritized in the algorithm. Add your company name and location to the caption.",
-  };
-  const tip = tipMap[platform?.id] || "Post consistently — contractors who post 3+ times per week see 10× more inbound leads from social media.";
-
-  return (
-    <div>
-      <div className="screen-header">
-        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:6}}>
-          <div style={{width:44,height:44,borderRadius:12,background:'linear-gradient(135deg,#10B981,#34D399)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800}}>✓</div>
-          <div>
-            <h1 className="screen-title" style={{fontSize:40}}>CONTENT READY</h1>
-            <p className="screen-sub">Your {type?.name?.toLowerCase()} is ready — download and post</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="result-layout">
-        <div>
-          <div className="result-preview-card">
-            {isAITimelapse
-              ? <AITimelapsePlayer result={result} />
-              : isVideo
-                ? <video controls autoPlay muted loop src={result.url} style={{width:'100%',display:'block',maxHeight:520,objectFit:'contain',background:'#000'}} />
-                : <>
-                    <img src={result.urls[activeIdx]} alt="" />
-                    {result.urls.length>1 &&
-                      <div className="photo-carousel">
-                        {result.urls.map((url,i)=>(
-                          <img key={i} src={url} alt="" className={activeIdx===i?'active':''} onClick={()=>setActiveIdx(i)} />
-                        ))}
-                      </div>
-                    }
-                  </>
-            }
-          </div>
-
-          <div className="result-meta-row">
-            {[
-              ['Platform', platform?.name],
-              ['Format', isAITimelapse ? `AI Video · ${result.urls?.length} clips` : isVideo ? 'Video · WebM' : `${result.urls?.length} Photos`],
-              ['Aspect', platform?.aspect],
-            ].map(([k,v])=>(
-              <div key={k} className="result-meta-pill">
-                <div className="result-meta-key">{k}</div>
-                <div className="result-meta-val">{v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="dl-panel">
-            <div className="dl-title">DOWNLOAD</div>
-
-            {isAITimelapse ? (
-              <>
-                <div style={{fontSize:12,color:'var(--text-2)',marginBottom:12,lineHeight:1.5}}>
-                  Your AI clips are hosted links — tap each to open and save directly to your phone or camera roll.
-                </div>
-                {result.urls.map((url,i)=>(
-                  <a key={i} className="dl-btn" href={url} target="_blank" rel="noreferrer">
-                    <div className="dl-btn-left">
-                      <span className="dl-icon">🎬</span>
-                      <div>
-                        <div className="dl-name">AI Clip {i+1} — {result.projectInfo?.phases[Math.min(Math.floor((i/result.urls.length)*result.projectInfo.phases.length),result.projectInfo.phases.length-1)]}</div>
-                        <div className="dl-size">MP4 · AI Generated · Tap to open</div>
-                      </div>
-                    </div>
-                    <span className="dl-arrow">↗</span>
-                  </a>
-                ))}
-              </>
-            ) : isVideo ? (
-              <a className="dl-btn" href={result.url} download={result.filename}>
-                <div className="dl-btn-left">
-                  <span className="dl-icon">📥</span>
-                  <div>
-                    <div className="dl-name">Download Video</div>
-                    <div className="dl-size">WebM · HD · Ready to upload</div>
-                  </div>
-                </div>
-                <span className="dl-arrow">→</span>
-              </a>
-            ) : (
-              <>
-                <div className="dl-btn" onClick={()=>{
-                  result.urls.forEach((url,i)=>{
-                    const a=document.createElement('a'); a.href=url;
-                    a.download=`${result.filename}_${i+1}.jpg`; a.click();
-                  });
-                }}>
-                  <div className="dl-btn-left">
-                    <span className="dl-icon">📦</span>
-                    <div>
-                      <div className="dl-name">Download All Photos</div>
-                      <div className="dl-size">{result.urls?.length} files · JPEG</div>
-                    </div>
-                  </div>
-                  <span className="dl-arrow">→</span>
-                </div>
-                {result.urls?.map((url,i)=>(
-                  <a key={i} className="dl-btn" href={url} download={`${result.filename}_${i+1}.jpg`}>
-                    <div className="dl-btn-left">
-                      <span className="dl-icon">🖼</span>
-                      <div>
-                        <div className="dl-name">Photo {i+1}</div>
-                        <div className="dl-size">{platform?.w}×{platform?.h} · JPEG</div>
-                      </div>
-                    </div>
-                    <span className="dl-arrow">→</span>
-                  </a>
-                ))}
-              </>
-            )}
-
-            <div style={{borderTop:'1px solid var(--border)',marginTop:18,paddingTop:18}}>
-              <button className="btn btn-ghost" style={{width:'100%'}} onClick={onNew}>
-                ↺ &nbsp;Create Another
-              </button>
-            </div>
-          </div>
-
-          <div className="tip-card">
-            <div className="tip-label">📣 Platform Tip</div>
-            <p className="tip-text">{tip}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── PRICING ─────────────────────────────────── */
-function PricingModal({ onClose, onUpgrade, remaining }) {
-  return (
-    <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
-
-        <div className="modal-header">
-          <div className="modal-eyebrow">🔓 Unlock Full Access</div>
-          <h2 className="modal-title">CHOOSE YOUR PLAN</h2>
-          <p className="modal-sub">
-            {remaining>0
-              ? `You have ${remaining} free video${remaining!==1?'s':''} remaining. Upgrade anytime.`
-              : "You've used all 3 free videos. Keep creating below."}
-          </p>
-        </div>
-
-        <div className="plans-grid">
-          {PLANS.map(plan=>(
-            <div key={plan.id} className={`plan-card ${plan.pop?'pop':''}`}>
-              {plan.pop && <div className="pop-badge">MOST POPULAR</div>}
-              <div className="plan-name" style={{color:plan.color}}>{plan.name}</div>
-              <div className="plan-price-wrap">
-                <span className="plan-price">${plan.price}</span>
-                <span className="plan-price-per">/month</span>
-              </div>
-              <div className="plan-videos">{plan.videos} videos per month</div>
-              <ul className="plan-features">
-                {plan.features.map(f=><li key={f}>{f}</li>)}
-              </ul>
-              <button
-                className={`btn ${plan.pop?'btn-primary':'btn-dark'} btn-lg plan-btn`}
-                style={plan.pop?{background:plan.color,color:'#000'}:{}}
-                onClick={()=>onUpgrade(plan.id)}
-              >
-                Get {plan.name}
-              </button>
+      <div className="cfg-section">
+        <div className="cfg-label">Video Format</div>
+        <div className="fmt-row">
+          {FORMATS.map(f => (
+            <div key={f.id} className={`fmt-btn${fmt.id === f.id ? ' sel' : ''}`} onClick={() => setFmt(f)}>
+              <span className="fmt-icon">{f.icon}</span>
+              {f.label}
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="modal-footer">
-          Cancel anytime &nbsp;·&nbsp; No hidden fees &nbsp;·&nbsp; All plans include all 5 content types
+      {error && <div className="err-box" style={{marginBottom:'20px'}}>⚠ {error}</div>}
+
+      <button className="gen-btn" onClick={handleGenerate} disabled={!canGen}>
+        {canGen ? '✦  Generate AI Timelapse' : 'Upload both photos to continue'}
+      </button>
+    </div>
+  );
+}
+
+/* ─── ProcessingScreen ───────────────────────────────────── */
+function ProcessingScreen({ progress, phase, stepIdx }) {
+  return (
+    <div className="proc-screen fade-in">
+      <div className="proc-ring" />
+      <div>
+        <div className="proc-h1">Building Your Video</div>
+        <div className="proc-phase">{phase || 'Starting up...'}</div>
+      </div>
+      <div style={{width:'100%'}}>
+        <div className="proc-bar-wrap">
+          <div className="proc-bar" style={{width:`${progress}%`}} />
         </div>
+        <div className="proc-pct">{Math.round(progress)}%</div>
+      </div>
+      <div className="proc-steps">
+        {STEPS.map((s, i) => {
+          const done   = i < stepIdx;
+          const active = i === stepIdx;
+          return (
+            <div key={s} className="proc-step">
+              <div className={`ps-dot${done?' done':active?' active':''}`}>{done ? '✓' : i+1}</div>
+              <div className={`ps-text${done?' done':active?' active':''}`}>{s}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="proc-note">
+        ⏱ Kling AI typically takes 60–120 seconds. Keep this tab open — your video is being generated in real time.
       </div>
     </div>
   );
 }
 
-/* ── MOUNT ───────────────────────────────────── */
+/* ─── ResultScreen ───────────────────────────────────────── */
+function ResultScreen({ videoUrl, fmt, onStartOver }) {
+  const [loading, setLoading] = useState(false);
+  const portrait = fmt.aspect === '9:16';
+
+  const download = async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(videoUrl);
+      const blob = await r.blob();
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `buildcast_timelapse_${Date.now()}.mp4`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      window.open(videoUrl, '_blank'); // CORS fallback
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="result-screen fade-in">
+      <div className="result-badge bounce-in">✓ &nbsp;Your timelapse is ready</div>
+      <h1 className="result-h1 fade-up">TRANSFORMATION<br />COMPLETE</h1>
+      <div className={`video-container${portrait ? ' portrait' : ''} fade-up-1`}>
+        <video src={videoUrl} controls autoPlay loop playsInline />
+      </div>
+      <div className="result-actions fade-up-2">
+        <button className="btn-amber" onClick={download} disabled={loading}>
+          {loading ? '⟳ Downloading...' : '↓  Download Video'}
+        </button>
+        <button className="btn-ghost" onClick={onStartOver}>← Create Another</button>
+      </div>
+      <div className="result-note fade-up-3">Video link expires in 24 hours — download to keep.</div>
+    </div>
+  );
+}
+
+/* ─── App ────────────────────────────────────────────────── */
+function App() {
+  const [screen,   setScreen]   = useState('home');
+  const [progress, setProgress] = useState(0);
+  const [phase,    setPhase]    = useState('');
+  const [stepIdx,  setStep]     = useState(0);
+  const [videoUrl, setVideo]    = useState(null);
+  const [fmt,      setFmt]      = useState(FORMATS[0]);
+  const [error,    setError]    = useState('');
+
+  const [usageCount, setUsage] = useState(() => {
+    try { return parseInt(localStorage.getItem('bc_usage') || '0', 10); } catch(e) { return 0; }
+  });
+  const [isPro, setIsPro] = useState(() => {
+    try { return localStorage.getItem('bc_pro') === 'true'; } catch(e) { return false; }
+  });
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('success') === 'true') {
+      setIsPro(true);
+      try { localStorage.setItem('bc_pro', 'true'); } catch(e) {}
+      window.history.replaceState({}, '', '/');
+    }
+    if (p.get('canceled') === 'true') window.history.replaceState({}, '', '/');
+  }, []);
+
+  const handleGenerate = async (before, after, projType, aspect, format) => {
+    if (!isPro && usageCount >= FREE_LIMIT) {
+      setError(`You've used all ${FREE_LIMIT} free timelapses. Upgrade to continue.`);
+      setScreen('upload');
+      return;
+    }
+    setFmt(format);
+    setScreen('processing');
+    setProgress(0); setPhase('Analyzing your photos...'); setStep(0); setError('');
+
+    try {
+      await sleep(700);
+      setProgress(10); setPhase('Connecting to Kling AI...'); setStep(1);
+
+      const requestId = await startGeneration(before, after, projType, aspect);
+
+      setProgress(18); setPhase('AI is generating your transformation...'); setStep(2);
+
+      // Poll
+      let attempts = 0;
+      const max = 60; // ~3.5 min
+      while (attempts < max) {
+        await sleep(3500);
+        attempts++;
+
+        const result = await pollStatus(requestId);
+
+        if (result.status === 'completed' && result.videoUrl) {
+          setProgress(96); setPhase('Finalizing...'); setStep(3);
+          await sleep(700);
+          setProgress(100);
+
+          const newCount = usageCount + 1;
+          setUsage(newCount);
+          try { localStorage.setItem('bc_usage', String(newCount)); } catch(e) {}
+
+          setVideo(result.videoUrl);
+          setScreen('result');
+          return;
+        }
+
+        if (result.status === 'failed') {
+          throw new Error(result.error || 'AI generation failed. Please try again.');
+        }
+
+        const pct = Math.min(93, 18 + (attempts / max) * 74);
+        setProgress(pct);
+        if      (attempts < 8)  setPhase(`AI generating transformation... (${Math.round(attempts * 3.5)}s)`);
+        else if (attempts < 20) setPhase('Still generating — complex scenes take time...');
+        else                    setPhase('Nearly there — final render in progress...');
+      }
+
+      throw new Error('Generation timed out. Please try again with a different photo pair.');
+
+    } catch(e) {
+      console.error('Generation error:', e.message);
+      setError(e.message);
+      setScreen('upload');
+    }
+  };
+
+  const Nav = ({ back }) => (
+    <nav className="nav">
+      <div className="logo" onClick={back ? () => setScreen('home') : undefined} style={back ? {cursor:'pointer'} : {}}>
+        BUILD<span className="logo-accent">CAST</span>
+      </div>
+      <div className="nav-pill">AI TIMELAPSE</div>
+    </nav>
+  );
+
+  if (screen === 'home')       return <><Nav /><HomeScreen onStart={() => setScreen('upload')} /></>;
+  if (screen === 'upload')     return <><Nav back /><UploadScreen onGenerate={handleGenerate} error={error} /></>;
+  if (screen === 'processing') return <><Nav /><ProcessingScreen progress={progress} phase={phase} stepIdx={stepIdx} /></>;
+  if (screen === 'result')     return <><Nav back /><ResultScreen videoUrl={videoUrl} fmt={fmt} onStartOver={() => { setVideo(null); setError(''); setScreen('upload'); }} /></>;
+  return null;
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
