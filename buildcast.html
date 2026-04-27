@@ -213,7 +213,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
   border-color:var(--amber);
   background:var(--amber-dim);
 }
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10;font-size:0}
 .upload-float{animation:float 3.5s ease-in-out infinite;font-size:56px;margin-bottom:20px}
 .upload-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;margin-bottom:10px}
 .upload-sub{color:var(--text-2);font-size:15px;margin-bottom:6px}
@@ -901,14 +901,21 @@ function App() {
 
   const addPhotos = useCallback((files) => {
     [...files].forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        setPhotos(p=>[...p,url]);
-        setImgEls(p=>[...p,img]);
+      // Use FileReader (data URL) instead of createObjectURL — universally reliable
+      // on mobile Chrome/Safari including iOS where blob URLs can silently fail.
+      // Skip the MIME type check: mobile browsers sometimes return '' for gallery photos.
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        if (!dataUrl || !dataUrl.startsWith('data:image')) return;
+        const img = new Image();
+        img.onload = () => {
+          setPhotos(p => [...p, dataUrl]);
+          setImgEls(p => [...p, img]);
+        };
+        img.src = dataUrl;
       };
-      img.src = url;
+      reader.readAsDataURL(file);
     });
   }, []);
 
@@ -1209,9 +1216,10 @@ function UploadScreen({ type, photos, onBack, onNext, onAdd, onRemove }) {
         onDragOver={e=>{e.preventDefault();setDrag(true)}}
         onDragLeave={()=>setDrag(false)}
         onDrop={onDrop}
-        onClick={()=>ref.current?.click()}
       >
-        <input ref={ref} type="file" accept="image/*" multiple onChange={e=>onAdd(e.target.files)} />
+        <input ref={ref} type="file" accept="image/*,image/heic,image/heif" multiple
+          style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',width:'100%',height:'100%',zIndex:10}}
+          onChange={e=>onAdd(e.target.files)} />
         <div className="upload-float">📸</div>
         <div className="upload-title">DROP YOUR PHOTOS HERE</div>
         <p className="upload-sub">Or click anywhere to browse</p>
