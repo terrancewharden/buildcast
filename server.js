@@ -1198,4 +1198,33 @@ const server = http.createServer(async (req, res) => {
       if (!d) return json(res, 401, { error: 'Not authenticated' });
       const sql = getSql();
       if (!sql) return json(res, 200, { bids: [] });
-      const 
+      const bids = await sql`SELECT * FROM bc_bids WHERE user_id = ${d.sub} ORDER BY created_at DESC LIMIT 50`;
+      json(res, 200, { bids });
+    } catch(e) { json(res, 500, { error: e.message }); }
+    return;
+  }
+
+  /* ── POST /api/bids ── */
+  if (req.method === 'POST' && req.url === '/api/bids') {
+    try {
+      const d = parseToken(getBearerToken(req));
+      if (!d) return json(res, 401, { error: 'Not authenticated' });
+      const { beforeUrl, renderUrl, projectType, jobId } = await readBody(req);
+      const sql = getSql();
+      if (!sql) return json(res, 200, { ok: true, id: null });
+      const rows = await sql`
+        INSERT INTO bc_bids (user_id, job_id, before_url, render_url, project_type)
+        VALUES (${d.sub}, ${jobId||null}, ${beforeUrl||null}, ${renderUrl||null}, ${projectType||null})
+        RETURNING id`;
+      json(res, 201, { ok: true, id: rows[0].id });
+    } catch(e) { json(res, 500, { error: e.message }); }
+    return;
+  }
+
+  res.writeHead(404); res.end('Not found');
+});
+
+server.listen(PORT, () => {
+  console.log(`BuildCast v2 — AI Timelapse — live on port ${PORT}`);
+  initDB().catch(e => console.error('[DB] startup init failed:', e.message));
+});
