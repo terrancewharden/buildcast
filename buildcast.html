@@ -1219,12 +1219,19 @@ function HelpModal({ currentUser, onClose }) {
 
 /* ─── WatermarkSettingsModal ─────────────────────────────── */
 function WatermarkSettingsModal({ userProfile, token, onSave, onClose }) {
+  const [avatar,  setAvatar]  = useState(userProfile?.avatar  || null);
   const [logo,    setLogo]    = useState(userProfile?.logo    || null);
   const [website, setWebsite] = useState(userProfile?.website || '');
   const [phone,   setPhone]   = useState(userProfile?.phone   || '');
   const [saving,  setSaving]  = useState(false);
   const [err,     setErr]     = useState('');
   const [saved,   setSaved]   = useState(false);
+
+  const handleAvatar = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatar(await resizeImage(await readFileAsDataUrl(file), 300));
+  };
 
   const handleLogo = async (e) => {
     const file = e.target.files?.[0];
@@ -1240,12 +1247,12 @@ function WatermarkSettingsModal({ userProfile, token, onSave, onClose }) {
       const r = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ logo, website: website.trim(), phone: phone.trim() }),
+        body: JSON.stringify({ avatar, logo, website: website.trim(), phone: phone.trim() }),
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
       setSaved(true);
-      onSave({ logo, website: website.trim(), phone: phone.trim() });
+      onSave({ avatar, logo, website: website.trim(), phone: phone.trim() });
       setTimeout(onClose, 900);
     } catch(e) { setErr(e.message); }
     finally { setSaving(false); }
@@ -1262,6 +1269,24 @@ function WatermarkSettingsModal({ userProfile, token, onSave, onClose }) {
           <div style={{fontSize:12,color:'var(--text-2)',lineHeight:1.6}}>
             Your logo and contact info will appear on every downloaded video.
           </div>
+        </div>
+
+        {/* Profile Photo */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--text-2)',letterSpacing:1,marginBottom:8}}>PROFILE PHOTO</div>
+          <label style={{display:'flex',alignItems:'center',gap:12,background:'var(--s2)',border:'1.5px dashed var(--border)',borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'border-color 0.2s'}}
+            onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(245,158,11,0.4)'}
+            onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+            {avatar
+              ? <img src={avatar} style={{width:52,height:52,objectFit:'cover',borderRadius:'50%',background:'#fff'}} />
+              : <div style={{width:52,height:52,borderRadius:'50%',background:'var(--s3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,color:'var(--text-3)'}}>&#128100;</div>
+            }
+            <div>
+              <div style={{fontWeight:700,fontSize:13,color:'var(--text)',marginBottom:2}}>{avatar ? 'Change Photo' : 'Upload Photo'}</div>
+              <div style={{fontSize:11,color:'var(--text-3)'}}>Appears in the nav · PNG or JPG</div>
+            </div>
+            <input type="file" accept="image/*" onChange={handleAvatar} style={{position:'absolute',opacity:0,width:0,height:0}} />
+          </label>
         </div>
 
         {/* Logo upload */}
@@ -1674,7 +1699,7 @@ function ProjectPreviewScreen({ onBack, initialBefore, onUseAsAfter, token, curr
           Upload a property photo — AI renders a photorealistic finished result. Attach it to your proposal and close more bids.
         </p>
         <div style={{fontSize:12,color:'var(--amber)',fontWeight:600,background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.18)',borderRadius:8,padding:'8px 12px',lineHeight:1.5}}>
-          Contractors using Bid Mode report winning more estimates. One render. One job.
+          Contractors using Bid Mode report winning more estimates. One render. One job. That's $0.03 well spent.
         </div>
       </div>
 
@@ -2200,7 +2225,7 @@ function HomeScreen({ onStart, onPreview }) {
             <div className="tool-card-icon">&#10022;</div>
             <div className="tool-card-name" style={{color:'#818cf8'}}>Bid Mode</div>
             <div className="tool-card-desc">Upload a photo of the property before work starts — AI renders a photorealistic finished result. Show clients exactly what they're getting before you break ground.</div>
-            <div className="tool-card-badge" style={{background:'rgba(99,102,241,0.12)',color:'#818cf8',borderColor:'rgba(99,102,241,0.3)'}}>WIN JOBS · ONE RENDER</div>
+            <div className="tool-card-badge" style={{background:'rgba(99,102,241,0.12)',color:'#818cf8',borderColor:'rgba(99,102,241,0.3)'}}>WIN JOBS · ONE RENDER · $0.03</div>
           </div>
 
         </div>
@@ -3749,14 +3774,20 @@ function App() {
             <button
               onClick={() => { setShowProfileMenu(p => !p); setShowSiteMenu(false); }}
               style={{
-                display:'flex',alignItems:'center',gap:6,
+                display:'flex',alignItems:'center',gap:8,
                 background:'var(--s2)',border:'1px solid var(--border)',
-                borderRadius:20,padding:'6px 14px',cursor:'pointer',
+                borderRadius:20,padding:'4px 12px 4px 4px',cursor:'pointer',
                 color:'var(--text-2)',fontSize:12,fontWeight:600,transition:'all 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(245,158,11,0.4)'; e.currentTarget.style.color='var(--text)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--text-2)'; }}
             >
+              {(userProfile?.avatar || userProfile?.logo)
+                ? <img src={userProfile.avatar || userProfile.logo} style={{width:28,height:28,borderRadius:'50%',objectFit:'cover',background:'var(--s3)',flexShrink:0}} />
+                : <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,background:'linear-gradient(135deg,rgba(245,158,11,0.4),rgba(245,158,11,0.15))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'var(--amber)'}}>
+                    {currentUser.email[0].toUpperCase()}
+                  </div>
+              }
               {currentUser.email.split('@')[0]}
               <span style={{fontSize:9,opacity:0.6}}>▾</span>
             </button>

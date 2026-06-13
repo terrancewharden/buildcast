@@ -72,6 +72,7 @@ async function initDB() {
     await sql`ALTER TABLE bc_users ADD COLUMN IF NOT EXISTS wm_logo    TEXT`;
     await sql`ALTER TABLE bc_users ADD COLUMN IF NOT EXISTS wm_website TEXT`;
     await sql`ALTER TABLE bc_users ADD COLUMN IF NOT EXISTS wm_phone   TEXT`;
+    await sql`ALTER TABLE bc_users ADD COLUMN IF NOT EXISTS avatar     TEXT`;
     // v3 — Job Board, Portfolio, Bid Mode (June 2026)
     await sql`ALTER TABLE bc_users ADD COLUMN IF NOT EXISTS username      TEXT UNIQUE`;
     await sql`ALTER TABLE bc_users ADD COLUMN IF NOT EXISTS business_name TEXT`;
@@ -145,7 +146,7 @@ async function dbGetUserByEmail(email) {
   const u = rows[0];
   return { id:u.id, email:u.email, password:u.password,
     createdAt:u.created_at, videosGenerated:u.videos_generated, lastActive:u.last_active,
-    wmLogo:u.wm_logo||null, wmWebsite:u.wm_website||null, wmPhone:u.wm_phone||null,
+    wmLogo:u.wm_logo||null, wmWebsite:u.wm_website||null, wmPhone:u.wm_phone||null, avatar:u.avatar||null,
     username:u.username||null, businessName:u.business_name||null, tagline:u.tagline||null };
 }
 
@@ -173,7 +174,7 @@ async function dbUpdateUserProfile(userId, { wmLogo, wmWebsite, wmPhone, usernam
     if (usr) { usr.wmLogo = wmLogo; usr.wmWebsite = wmWebsite; usr.wmPhone = wmPhone; usr.username = username; usr.businessName = businessName; usr.tagline = tagline; saveUsers(u); }
     return;
   }
-  await sql`UPDATE bc_users SET wm_logo=${wmLogo||null}, wm_website=${wmWebsite||null}, wm_phone=${wmPhone||null}, username=${username||null}, business_name=${businessName||null}, tagline=${tagline||null} WHERE id=${userId}`;
+  await sql`UPDATE bc_users SET wm_logo=${wmLogo||null}, wm_website=${wmWebsite||null}, wm_phone=${wmPhone||null}, username=${username||null}, business_name=${businessName||null}, tagline=${tagline||null}, avatar=${avatar||null} WHERE id=${userId}`;
 }
 
 async function dbIncrementStat(key) {
@@ -926,7 +927,7 @@ const server = http.createServer(async (req, res) => {
       if (!d) return json(res, 401, { error: 'Not authenticated' });
       const user = await dbGetUserByEmail(d.email);
       if (!user) return json(res, 404, { error: 'User not found' });
-      json(res, 200, { logo: user.wmLogo||null, website: user.wmWebsite||'', phone: user.wmPhone||'', username: user.username||null, businessName: user.businessName||null, tagline: user.tagline||null });
+      json(res, 200, { logo: user.wmLogo||null, website: user.wmWebsite||'', phone: user.wmPhone||'', username: user.username||null, businessName: user.businessName||null, tagline: user.tagline||null, avatar: user.avatar||null });
     } catch(e) { json(res, 500, { error: e.message }); }
     return;
   }
@@ -936,9 +937,9 @@ const server = http.createServer(async (req, res) => {
     try {
       const d = parseToken(getBearerToken(req));
       if (!d) return json(res, 401, { error: 'Not authenticated' });
-      const { logo, website, phone, username, businessName, tagline } = await readBody(req);
-      await dbUpdateUserProfile(d.sub, { wmLogo: logo||null, wmWebsite: website||null, wmPhone: phone||null, username: username||null, businessName: businessName||null, tagline: tagline||null });
-      json(res, 200, { ok: true, logo: logo||null, website: website||'', phone: phone||'', username: username||null, businessName: businessName||null, tagline: tagline||null });
+      const { logo, website, phone, username, businessName, tagline, avatar } = await readBody(req);
+      await dbUpdateUserProfile(d.sub, { wmLogo: logo||null, wmWebsite: website||null, wmPhone: phone||null, username: username||null, businessName: businessName||null, tagline: tagline||null, avatar: avatar||null });
+      json(res, 200, { ok: true, logo: logo||null, website: website||'', phone: phone||'', username: username||null, businessName: businessName||null, tagline: tagline||null, avatar: avatar||null });
     } catch(e) { json(res, 500, { error: e.message }); }
     return;
   }
@@ -1197,33 +1198,4 @@ const server = http.createServer(async (req, res) => {
       if (!d) return json(res, 401, { error: 'Not authenticated' });
       const sql = getSql();
       if (!sql) return json(res, 200, { bids: [] });
-      const bids = await sql`SELECT * FROM bc_bids WHERE user_id = ${d.sub} ORDER BY created_at DESC LIMIT 50`;
-      json(res, 200, { bids });
-    } catch(e) { json(res, 500, { error: e.message }); }
-    return;
-  }
-
-  /* ── POST /api/bids ── */
-  if (req.method === 'POST' && req.url === '/api/bids') {
-    try {
-      const d = parseToken(getBearerToken(req));
-      if (!d) return json(res, 401, { error: 'Not authenticated' });
-      const { beforeUrl, renderUrl, projectType, jobId } = await readBody(req);
-      const sql = getSql();
-      if (!sql) return json(res, 200, { ok: true, id: null });
-      const rows = await sql`
-        INSERT INTO bc_bids (user_id, job_id, before_url, render_url, project_type)
-        VALUES (${d.sub}, ${jobId||null}, ${beforeUrl||null}, ${renderUrl||null}, ${projectType||null})
-        RETURNING id`;
-      json(res, 201, { ok: true, id: rows[0].id });
-    } catch(e) { json(res, 500, { error: e.message }); }
-    return;
-  }
-
-  res.writeHead(404); res.end('Not found');
-});
-
-server.listen(PORT, () => {
-  console.log(`BuildCast v2 — AI Timelapse — live on port ${PORT}`);
-  initDB().catch(e => console.error('[DB] startup init failed:', e.message));
-});
+      const 
