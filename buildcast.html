@@ -1914,10 +1914,11 @@ const TESTIMONIALS = [
   {
     name: 'Marcus Webb',
     title: 'Realtor · Keller Williams',
-    avatar: '',
+    avatar: 'M',
     avatarBg: '#1a3a5c',
     quote: 'I posted a BuildCast timelapse of a gut renovation I listed and it went from 400 views to 38,000 overnight. Had 3 buyer inquiries by morning. This is the listing content game-changer.',
-    result: '',
+    resultImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_160556_cb5cd4f1-0401-4091-a3c3-da647ed3a22a_min.webp',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_161416_2d13cbcd-710a-436e-b5dd-9ef4f4802a39.mp4',
     resultLabel: 'Listing sold in 4 days',
     resultBg: 'linear-gradient(135deg,#0d2137,#1a4a6b)',
     platform: 'Instagram Reels',
@@ -1926,10 +1927,11 @@ const TESTIMONIALS = [
   {
     name: 'Denise Calloway',
     title: 'Real Estate Agent · RE/MAX',
-    avatar: '',
+    avatar: 'D',
     avatarBg: '#2d1a3a',
-    quote: 'My luxury listings now come with a full content package — before/after timelapse, staged preview, and a presentation video for open house. BuildCast does it all in under 10 minutes.',
-    result: '',
+    quote: 'My luxury listings now come with a full content package — before/after timelapse, staged preview, and a bid presentation. BuildCast does it all in under 10 minutes.',
+    resultImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_160558_1615e866-4219-4a9b-aa25-10479b57fca1_min.webp',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_161419_5f597ad3-5f54-4d19-9a85-0360b5cddab2.mp4',
     resultLabel: '12 new seller leads in a week',
     resultBg: 'linear-gradient(135deg,#1a0d2e,#3d1f5c)',
     platform: 'TikTok',
@@ -1938,10 +1940,11 @@ const TESTIMONIALS = [
   {
     name: 'DeShawn Okafor',
     title: 'General Contractor · Okafor Builds',
-    avatar: '',
+    avatar: 'D',
     avatarBg: '#1a2e0d',
     quote: 'I posted my first BuildCast video of a deck build and won two new contracts from it. Clients literally said "I saw your video." It took me 5 minutes to make. I use it for every project now.',
-    result: '',
+    resultImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_160559_c8972897-b7f1-4c1f-8ee6-66f38c579647_min.webp',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_161424_f2699f37-61b0-4cc2-b30c-755c60932367.mp4',
     resultLabel: '+2 new contracts from 1 post',
     resultBg: 'linear-gradient(135deg,#0d1f0a,#1c3d12)',
     platform: 'Facebook',
@@ -1950,10 +1953,11 @@ const TESTIMONIALS = [
   {
     name: 'Ray Toscano',
     title: 'Custom Home Builder · Toscano Group',
-    avatar: '',
+    avatar: 'R',
     avatarBg: '#2e1a0d',
-    quote: 'We used to hire a videographer for project showcases — $800 a shoot. Now I generate a better-looking timelapse in 10 minutes for free. Every project gets documented automatically.',
-    result: '',
+    quote: 'We used to hire a videographer for project showcases — $800 a shoot. Now I generate a better-looking timelapse in 10 minutes. Every project gets documented automatically.',
+    resultImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_160601_5e10e76c-6075-4cac-8cbb-e154285bcba5_min.webp',
+    videoUrl: null,
     resultLabel: 'Saved $9,600/year on video',
     resultBg: 'linear-gradient(135deg,#1f0f00,#3d2000)',
     platform: 'YouTube',
@@ -1962,10 +1966,11 @@ const TESTIMONIALS = [
   {
     name: 'Priya Anand',
     title: 'Interior Designer · Studio Anand',
-    avatar: '',
+    avatar: 'P',
     avatarBg: '#1a1a2e',
-    quote: 'Before/after room transformations are my whole brand. BuildCast turns a quick phone photo into a cinematic reveal video. My staging content now gets more engagement than any professional photo shoot I\'ve ever paid for.',
-    result: '',
+    quote: 'Before/after room transformations are my whole brand. BuildCast turns a quick phone photo into a cinematic reveal video. My staging content now gets more engagement than any professional shoot I\'ve paid for.',
+    resultImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_160641_e12d28ae-4d77-457c-b56b-912bbfd546bd_min.webp',
+    videoUrl: null,
     resultLabel: '4 new design clients in 2 months',
     resultBg: 'linear-gradient(135deg,#0d0d20,#1a1a40)',
     platform: 'Instagram',
@@ -2013,6 +2018,105 @@ const EXAMPLE_PROJECTS = [
     videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_153417_2f34aaee-52be-43d5-a52a-fae9d33b8c33.mp4',
   },
 ];
+
+/* ─── TestimonialCard ───────────────────────────────────────── */
+function TestimonialCard({ t }) {
+  const [playing, setPlaying] = React.useState(false);
+  return (
+    <div style={{
+      minWidth:290,maxWidth:320,flexShrink:0,
+      background:'var(--s1)',border:'1px solid var(--border)',borderRadius:20,
+      padding:'22px 20px',scrollSnapAlign:'start',
+      display:'flex',flexDirection:'column',gap:14,
+    }}>
+      {/* Video / thumbnail area */}
+      <div style={{
+        width:'100%',aspectRatio:'9/16',maxHeight:200,borderRadius:12,
+        background:t.resultBg,position:'relative',overflow:'hidden',
+      }}>
+        {/* Thumbnail image */}
+        {t.resultImg && !playing && (
+          <img src={t.resultImg} alt="content result"
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} />
+        )}
+        {/* Inline video player */}
+        {t.videoUrl && playing && (
+          <video
+            src={t.videoUrl}
+            autoPlay
+            controls
+            playsInline
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',background:'#000'}}
+            onEnded={() => setPlaying(false)}
+          />
+        )}
+        {/* Gradient overlay (hidden when playing) */}
+        {!playing && (
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(transparent 55%,rgba(0,0,0,0.75))'}} />
+        )}
+        {/* Platform + views badges (hidden when playing) */}
+        {!playing && (
+          <div style={{position:'absolute',bottom:8,left:8,right:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{background:'rgba(0,0,0,0.65)',backdropFilter:'blur(4px)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'var(--amber)',letterSpacing:1}}>
+              {t.platform.toUpperCase()}
+            </div>
+            <div style={{background:'rgba(0,0,0,0.65)',backdropFilter:'blur(4px)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'#fff'}}>
+              {t.views}
+            </div>
+          </div>
+        )}
+        {/* Play button — only show when not playing */}
+        {!playing && (
+          <div
+            onClick={() => t.videoUrl ? setPlaying(true) : null}
+            style={{
+              position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
+              width:44,height:44,borderRadius:'50%',
+              background: t.videoUrl ? 'rgba(245,158,11,0.85)' : 'rgba(0,0,0,0.45)',
+              backdropFilter:'blur(4px)',
+              border: t.videoUrl ? '2px solid rgba(255,255,255,0.7)' : '1.5px solid rgba(255,255,255,0.5)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              cursor: t.videoUrl ? 'pointer' : 'default',
+              transition:'transform 0.15s,background 0.15s',
+            }}
+          >
+            <div style={{width:0,height:0,borderTop:'8px solid transparent',borderBottom:'8px solid transparent',borderLeft:t.videoUrl ? '14px solid #000' : '12px solid #fff',marginLeft:t.videoUrl ? 4 : 3}} />
+          </div>
+        )}
+        {/* "WATCH" label below play button when video is available */}
+        {!playing && t.videoUrl && (
+          <div onClick={() => setPlaying(true)} style={{
+            position:'absolute',top:'calc(50% + 30px)',left:'50%',transform:'translateX(-50%)',
+            fontSize:9,fontWeight:800,letterSpacing:2,color:'rgba(255,255,255,0.8)',
+            cursor:'pointer',textTransform:'uppercase',
+          }}>WATCH</div>
+        )}
+      </div>
+
+      {/* Result label */}
+      <div style={{fontSize:12,color:'var(--green)',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
+        ✓ {t.resultLabel}
+      </div>
+
+      {/* Quote */}
+      <p style={{fontSize:13,color:'var(--text-2)',lineHeight:1.65,fontStyle:'italic',flex:1}}>
+        &ldquo;{t.quote}&rdquo;
+      </p>
+
+      {/* Author */}
+      <div style={{display:'flex',alignItems:'center',gap:10,borderTop:'1px solid var(--border)',paddingTop:12}}>
+        <div style={{width:36,height:36,borderRadius:'50%',background:t.avatarBg,
+          display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:800,color:'#fff',flexShrink:0}}>
+          {t.avatar}
+        </div>
+        <div>
+          <div style={{fontWeight:800,fontSize:13}}>{t.name}</div>
+          <div style={{fontSize:11,color:'var(--text-3)'}}>{t.title}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ─── HomeScreen ─────────────────────────────────────────── */
 function HomeScreen({ onStart, onPreview }) {
@@ -2198,59 +2302,7 @@ function HomeScreen({ onStart, onPreview }) {
           scrollSnapType:'x mandatory',WebkitOverflowScrolling:'touch',
           scrollbarWidth:'none',msOverflowStyle:'none',
         }}>
-          {TESTIMONIALS.map((t,i) => (
-            <div key={i} style={{
-              minWidth:290,maxWidth:320,flexShrink:0,
-              background:'var(--s1)',border:'1px solid var(--border)',borderRadius:20,
-              padding:'22px 20px',scrollSnapAlign:'start',
-              display:'flex',flexDirection:'column',gap:14,
-            }}>
-              {/* Fake video result */}
-              <div style={{
-                width:'100%',aspectRatio:'9/16',maxHeight:160,borderRadius:12,
-                background:t.resultBg,position:'relative',overflow:'hidden',
-                display:'flex',alignItems:'center',justifyContent:'center',
-              }}>
-                <div style={{fontSize:36}}>{t.result}</div>
-                <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(255,255,255,0.02) 19px,rgba(255,255,255,0.02) 20px)'}} />
-                <div style={{position:'absolute',bottom:8,left:8,right:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <div style={{background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'var(--amber)',letterSpacing:1}}>
-                    {t.platform.toUpperCase()}
-                  </div>
-                  <div style={{background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'#fff'}}>
-                    {t.views}
-                  </div>
-                </div>
-                <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
-                  width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.18)',
-                  border:'1.5px solid rgba(255,255,255,0.4)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <div style={{width:0,height:0,borderTop:'6px solid transparent',borderBottom:'6px solid transparent',borderLeft:'10px solid #fff',marginLeft:2}} />
-                </div>
-              </div>
-
-              {/* Result label */}
-              <div style={{fontSize:12,color:'var(--green)',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
-                ✓ {t.resultLabel}
-              </div>
-
-              {/* Quote */}
-              <p style={{fontSize:13,color:'var(--text-2)',lineHeight:1.65,fontStyle:'italic',flex:1}}>
-                "{t.quote}"
-              </p>
-
-              {/* Author */}
-              <div style={{display:'flex',alignItems:'center',gap:10,borderTop:'1px solid var(--border)',paddingTop:12}}>
-                <div style={{width:36,height:36,borderRadius:'50%',background:t.avatarBg,
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                  {t.avatar}
-                </div>
-                <div>
-                  <div style={{fontWeight:800,fontSize:13}}>{t.name}</div>
-                  <div style={{fontSize:11,color:'var(--text-3)'}}>{t.title}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+          {TESTIMONIALS.map((t,i) => <TestimonialCard key={i} t={t} />)}
         </div>
         <div style={{textAlign:'center',marginTop:12,fontSize:11,color:'var(--text-3)'}}>
           ← Scroll to see more →
