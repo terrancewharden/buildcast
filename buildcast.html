@@ -1699,7 +1699,7 @@ function ProjectPreviewScreen({ onBack, initialBefore, onUseAsAfter, token, curr
           Upload a property photo — AI renders a photorealistic finished result. Attach it to your proposal and close more bids.
         </p>
         <div style={{fontSize:12,color:'var(--amber)',fontWeight:600,background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.18)',borderRadius:8,padding:'8px 12px',lineHeight:1.5}}>
-          Contractors using Bid Mode report winning more estimates. One render. One job. That's $0.03 well spent.
+          Contractors using Bid Mode report winning more estimates. One render. One job.
         </div>
       </div>
 
@@ -1976,33 +1976,38 @@ const TESTIMONIALS = [
 const EXAMPLE_PROJECTS = [
   {
     type: 'Residential Build',
-    emoji: '',
     beforeLabel: 'Empty lot · Day 1',
-    afterLabel: 'Move-in ready · 90 days',
+    afterLabel: 'Move-in ready · 87 days',
+    beforeImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_143643_2542edd5-8f26-4456-bfbd-7228dbcd6bcb_min.webp',
+    afterImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_143828_2c2c8649-a3fd-43da-b7d8-2f98e796a880_min.webp',
     beforeBg: 'linear-gradient(155deg,#1a1611 0%,#2d1f08 55%,#111010 100%)',
     afterBg: 'linear-gradient(155deg,#081520 0%,#0d3025 55%,#081416 100%)',
-    outcome: '15-sec timelapse → 41K views on TikTok',
-    outcomePlatform: ' TikTok',
+    outcome: '15-sec timelapse hit 41K views on TikTok',
+    outcomePlatform: 'TikTok · Organic',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_153411_2815ab20-a90c-40db-973d-60dffff93e85.mp4',
   },
   {
     type: 'Kitchen Renovation',
-    emoji: '',
-    beforeLabel: 'Demo start · Gutted',
-    afterLabel: 'Luxury finish · Reveal',
+    beforeLabel: 'Demo day · Gutted to studs',
+    afterLabel: 'Luxury reveal · Week 3',
+    beforeImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_143946_9d750f4c-6085-4647-9ce4-ca446f83275c_min.webp',
+    afterImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_143953_2bbef6c4-4019-4d1f-a11a-1c19cd826cd6_min.webp',
     beforeBg: 'linear-gradient(155deg,#1f1208 0%,#2e1a00 55%,#120e08 100%)',
     afterBg: 'linear-gradient(155deg,#0d1520 0%,#1a2a3d 55%,#080f18 100%)',
-    outcome: 'Staged preview landed 3 buyer leads',
-    outcomePlatform: ' Listing content',
+    outcome: 'Bid Mode render closed the deal same day',
+    outcomePlatform: 'Instagram · Client acquisition',
   },
   {
     type: 'Commercial Build',
-    emoji: '',
     beforeLabel: 'Foundation pour · Week 1',
     afterLabel: 'Grand opening · Month 8',
+    beforeImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_143932_5e9ad35c-2bbc-4e25-b68d-6664f35b1419_min.webp',
+    afterImg: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_143906_1135ca40-9249-4431-8dda-8e6909e9977c_min.webp',
     beforeBg: 'linear-gradient(155deg,#0f1215 0%,#1a2025 55%,#0a0c10 100%)',
     afterBg: 'linear-gradient(155deg,#0a1508 0%,#142200 55%,#080e06 100%)',
-    outcome: '30-sec epic → won 2 bids from referrals',
-    outcomePlatform: ' Proposal deck',
+    outcome: '30-sec timelapse won 2 contracts from referrals',
+    outcomePlatform: 'Bid Proposal · LinkedIn',
+    videoUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_35cJuPVl1uHgQnITpaKl4geRBXR/hf_20260615_153417_2f34aaee-52be-43d5-a52a-fae9d33b8c33.mp4',
   },
 ];
 
@@ -2080,10 +2085,40 @@ function HomeScreen({ onStart, onPreview }) {
             <div key={i} style={{background:'var(--s1)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden',transition:'border-color 0.2s'}}
               onMouseEnter={e=>e.currentTarget.style.borderColor='var(--amber)'}
               onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+              {/* Timelapse video strip */}
+              {ex.videoUrl && (
+                <div style={{position:'relative',height:140,overflow:'hidden',background:'#000'}}>
+                  <video
+                    src={ex.videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{width:'100%',height:'100%',objectFit:'cover',opacity:0.95}}
+                  />
+                  <div style={{position:'absolute',top:8,left:8,background:'rgba(0,0,0,0.6)',backdropFilter:'blur(6px)',
+                    border:'1px solid rgba(245,158,11,0.4)',borderRadius:6,padding:'3px 9px',
+                    fontSize:9,fontWeight:800,letterSpacing:1.5,color:'var(--amber)',display:'flex',alignItems:'center',gap:5}}>
+                    <span style={{fontSize:8}}>▶</span> TIMELAPSE
+                  </div>
+                  <button
+                    onClick={e => {
+                      const vid = e.currentTarget.parentElement.querySelector('video');
+                      vid.muted = !vid.muted;
+                      e.currentTarget.textContent = vid.muted ? '🔇' : '🔊';
+                    }}
+                    style={{position:'absolute',top:8,right:8,background:'rgba(0,0,0,0.6)',backdropFilter:'blur(6px)',
+                      border:'1px solid rgba(255,255,255,0.2)',borderRadius:6,padding:'4px 8px',
+                      fontSize:14,cursor:'pointer',lineHeight:1,color:'#fff',transition:'background 0.15s'}}
+                    title="Toggle audio"
+                  >🔇</button>
+                </div>
+              )}
               {/* Before/After mini cards */}
               <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:0,height:120}}>
-                <div style={{background:ex.beforeBg,position:'relative',display:'flex',alignItems:'flex-end',padding:10}}>
-                  <div style={{background:'rgba(0,0,0,0.55)',borderRadius:4,padding:'2px 7px',fontSize:9,fontWeight:800,letterSpacing:1.5,color:'#888'}}>
+                <div style={{background:ex.beforeBg,position:'relative',display:'flex',alignItems:'flex-end',padding:10,overflow:'hidden'}}>
+                  {ex.beforeImg && <img src={ex.beforeImg} alt="before" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.92}} />}
+                  <div style={{position:'relative',background:'rgba(0,0,0,0.55)',borderRadius:4,padding:'2px 7px',fontSize:9,fontWeight:800,letterSpacing:1.5,color:'#ccc'}}>
                     BEFORE
                   </div>
                 </div>
@@ -2092,8 +2127,9 @@ function HomeScreen({ onStart, onPreview }) {
                   <div style={{fontSize:12,color:'var(--amber)',fontWeight:900}}>AI</div>
                   <div style={{width:1,flex:1,background:'linear-gradient(var(--amber),transparent)'}} />
                 </div>
-                <div style={{background:ex.afterBg,position:'relative',display:'flex',alignItems:'flex-end',padding:10}}>
-                  <div style={{background:'rgba(245,158,11,0.15)',border:'1px solid rgba(245,158,11,0.3)',borderRadius:4,padding:'2px 7px',fontSize:9,fontWeight:800,letterSpacing:1.5,color:'var(--amber)'}}>
+                <div style={{background:ex.afterBg,position:'relative',display:'flex',alignItems:'flex-end',padding:10,overflow:'hidden'}}>
+                  {ex.afterImg && <img src={ex.afterImg} alt="after" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.92}} />}
+                  <div style={{position:'relative',background:'rgba(245,158,11,0.15)',border:'1px solid rgba(245,158,11,0.3)',borderRadius:4,padding:'2px 7px',fontSize:9,fontWeight:800,letterSpacing:1.5,color:'var(--amber)'}}>
                     AFTER
                   </div>
                 </div>
@@ -2225,7 +2261,7 @@ function HomeScreen({ onStart, onPreview }) {
             <div className="tool-card-icon">&#10022;</div>
             <div className="tool-card-name" style={{color:'#818cf8'}}>Bid Mode</div>
             <div className="tool-card-desc">Upload a photo of the property before work starts — AI renders a photorealistic finished result. Show clients exactly what they're getting before you break ground.</div>
-            <div className="tool-card-badge" style={{background:'rgba(99,102,241,0.12)',color:'#818cf8',borderColor:'rgba(99,102,241,0.3)'}}>WIN JOBS · ONE RENDER · $0.03</div>
+            <div className="tool-card-badge" style={{background:'rgba(99,102,241,0.12)',color:'#818cf8',borderColor:'rgba(99,102,241,0.3)'}}>WIN JOBS · ONE RENDER</div>
           </div>
 
         </div>
