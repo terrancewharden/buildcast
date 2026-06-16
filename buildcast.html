@@ -11,6 +11,15 @@
 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+/* Register classic JSX preset — forces React.createElement output, no ES import statements */
+Babel.registerPreset('react-classic', {
+  plugins: [[
+    Babel.availablePlugins['transform-react-jsx'],
+    { pragma: 'React.createElement', pragmaFrag: 'React.Fragment' }
+  ]]
+});
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -342,8 +351,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-/** @jsxRuntime classic */
+<script type="text/babel" data-presets="react-classic">
 const { useState, useCallback, useRef, useEffect } = React;
 
 /* ─── Constants ──────────────────────────────────────────── */
