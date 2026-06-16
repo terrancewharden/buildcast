@@ -2019,118 +2019,6 @@ const EXAMPLE_PROJECTS = [
   },
 ];
 
-/* ─── TestimonialCard ───────────────────────────────────────── */
-function TestimonialCard({ t }) {
-  /* DOM-controlled video play — no hooks needed */
-  function handlePlay(e) {
-    const wrap = e.currentTarget.closest('[data-tcwrap]');
-    wrap.querySelector('[data-thumb]').style.display = 'none';
-    wrap.querySelector('[data-overlay]').style.display = 'none';
-    wrap.querySelector('[data-badges]').style.display = 'none';
-    wrap.querySelector('[data-playbtn]').style.display = 'none';
-    var vEl = wrap.querySelector('[data-videl]');
-    vEl.style.display = 'block';
-    vEl.play();
-  }
-  function handleEnded(e) {
-    var wrap = e.currentTarget.closest('[data-tcwrap]');
-    wrap.querySelector('[data-thumb]').style.display = 'block';
-    wrap.querySelector('[data-overlay]').style.display = 'block';
-    wrap.querySelector('[data-badges]').style.display = 'flex';
-    wrap.querySelector('[data-playbtn]').style.display = 'flex';
-    e.currentTarget.style.display = 'none';
-  }
-  var hasVideo = !!t.videoUrl;
-  return (
-    <div style={{
-      minWidth:290,maxWidth:320,flexShrink:0,
-      background:'var(--s1)',border:'1px solid var(--border)',borderRadius:20,
-      padding:'22px 20px',scrollSnapAlign:'start',
-      display:'flex',flexDirection:'column',gap:14,
-    }}>
-      {/* Video / thumbnail area */}
-      <div data-tcwrap="1" style={{
-        width:'100%',aspectRatio:'9/16',maxHeight:200,borderRadius:12,
-        background:t.resultBg,position:'relative',overflow:'hidden',
-      }}>
-        {/* Thumbnail image */}
-        <img data-thumb="1" src={t.resultImg} alt="content result"
-          style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',
-            display: t.resultImg ? 'block' : 'none'}} />
-        {/* Inline video player — hidden until play clicked */}
-        {hasVideo && (
-          <video
-            data-videl="1"
-            src={t.videoUrl}
-            controls
-            playsInline
-            style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',background:'#000',display:'none'}}
-            onEnded={handleEnded}
-          />
-        )}
-        {/* Gradient overlay */}
-        <div data-overlay="1" style={{position:'absolute',inset:0,background:'linear-gradient(transparent 55%,rgba(0,0,0,0.75))'}} />
-        {/* Platform + views badges */}
-        <div data-badges="1" style={{position:'absolute',bottom:8,left:8,right:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <div style={{background:'rgba(0,0,0,0.65)',backdropFilter:'blur(4px)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'var(--amber)',letterSpacing:1}}>
-            {(t.platform || '').toUpperCase()}
-          </div>
-          <div style={{background:'rgba(0,0,0,0.65)',backdropFilter:'blur(4px)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'#fff'}}>
-            {t.views}
-          </div>
-        </div>
-        {/* Play button */}
-        <div
-          data-playbtn="1"
-          onClick={hasVideo ? handlePlay : undefined}
-          style={{
-            position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
-            width:44,height:44,borderRadius:'50%',
-            background: hasVideo ? 'rgba(245,158,11,0.85)' : 'rgba(0,0,0,0.45)',
-            backdropFilter:'blur(4px)',
-            border: hasVideo ? '2px solid rgba(255,255,255,0.7)' : '1.5px solid rgba(255,255,255,0.5)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            cursor: hasVideo ? 'pointer' : 'default',
-          }}
-        >
-          <div style={{width:0,height:0,borderTop:'8px solid transparent',borderBottom:'8px solid transparent',
-            borderLeft: hasVideo ? '14px solid #000' : '12px solid #fff',
-            marginLeft: hasVideo ? 4 : 3}} />
-        </div>
-        {hasVideo && (
-          <div onClick={handlePlay} style={{
-            position:'absolute',top:'calc(50% + 30px)',left:'50%',transform:'translateX(-50%)',
-            fontSize:9,fontWeight:800,letterSpacing:2,color:'rgba(255,255,255,0.8)',
-            cursor:'pointer',textTransform:'uppercase',
-          }}>WATCH</div>
-        )}
-      </div>
-
-      {/* Result label */}
-      <div style={{fontSize:12,color:'var(--green)',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
-        ✓ {t.resultLabel}
-      </div>
-
-      {/* Quote */}
-      <p style={{fontSize:13,color:'var(--text-2)',lineHeight:1.65,fontStyle:'italic',flex:1}}>
-        &ldquo;{t.quote}&rdquo;
-      </p>
-
-      {/* Author */}
-      <div style={{display:'flex',alignItems:'center',gap:10,borderTop:'1px solid var(--border)',paddingTop:12}}>
-        <div style={{width:36,height:36,borderRadius:'50%',background:t.avatarBg,
-          display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:800,color:'#fff',flexShrink:0}}>
-          {t.avatar}
-        </div>
-        <div>
-          <div style={{fontWeight:800,fontSize:13}}>{t.name}</div>
-          <div style={{fontSize:11,color:'var(--text-3)'}}>{t.title}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── HomeScreen ─────────────────────────────────────────── */
 function HomeScreen({ onStart, onPreview }) {
   return (
@@ -2315,7 +2203,49 @@ function HomeScreen({ onStart, onPreview }) {
           scrollSnapType:'x mandatory',WebkitOverflowScrolling:'touch',
           scrollbarWidth:'none',msOverflowStyle:'none',
         }}>
-          {TESTIMONIALS.map((t,i) => <TestimonialCard key={i} t={t} />)}
+          {TESTIMONIALS.map((t,i) => (
+            <div key={i} style={{
+              minWidth:290,maxWidth:320,flexShrink:0,
+              background:'var(--s1)',border:'1px solid var(--border)',borderRadius:20,
+              padding:'22px 20px',scrollSnapAlign:'start',
+              display:'flex',flexDirection:'column',gap:14,
+            }}>
+              <div style={{
+                width:'100%',aspectRatio:'9/16',maxHeight:200,borderRadius:12,
+                background:t.resultBg,position:'relative',overflow:'hidden',
+              }}>
+                {t.resultImg && (
+                  <img src={t.resultImg} alt="result"
+                    style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} />
+                )}
+                <div style={{position:'absolute',inset:0,background:'linear-gradient(transparent 55%,rgba(0,0,0,0.75))'}} />
+                <div style={{position:'absolute',bottom:8,left:8,right:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div style={{background:'rgba(0,0,0,0.65)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'var(--amber)',letterSpacing:1}}>
+                    {t.platform.toUpperCase()}
+                  </div>
+                  <div style={{background:'rgba(0,0,0,0.65)',borderRadius:4,padding:'3px 7px',fontSize:9,fontWeight:700,color:'#fff'}}>
+                    {t.views}
+                  </div>
+                </div>
+              </div>
+              <div style={{fontSize:12,color:'var(--green)',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
+                {t.resultLabel}
+              </div>
+              <p style={{fontSize:13,color:'var(--text-2)',lineHeight:1.65,fontStyle:'italic',flex:1}}>
+                "{t.quote}"
+              </p>
+              <div style={{display:'flex',alignItems:'center',gap:10,borderTop:'1px solid var(--border)',paddingTop:12}}>
+                <div style={{width:36,height:36,borderRadius:'50%',background:t.avatarBg,
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:800,color:'#fff',flexShrink:0}}>
+                  {t.avatar}
+                </div>
+                <div>
+                  <div style={{fontWeight:800,fontSize:13}}>{t.name}</div>
+                  <div style={{fontSize:11,color:'var(--text-3)'}}>{t.title}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
         <div style={{textAlign:'center',marginTop:12,fontSize:11,color:'var(--text-3)'}}>
           ← Scroll to see more →
