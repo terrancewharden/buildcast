@@ -10,16 +10,7 @@
 <script>window.$crisp=[];window.CRISP_WEBSITE_ID="YOUR_WEBSITE_ID";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script>
 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script>
-/* Register classic JSX preset — forces React.createElement output, no ES import statements */
-Babel.registerPreset('react-classic', {
-  plugins: [[
-    Babel.availablePlugins['transform-react-jsx'],
-    { pragma: 'React.createElement', pragmaFrag: 'React.Fragment' }
-  ]]
-});
-</script>
+<script src="https://unpkg.com/@babel/standalone@7.17.12/babel.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -351,7 +342,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel" data-presets="react-classic">
+<script type="text/babel">
 const { useState, useCallback, useRef, useEffect } = React;
 
 /* ─── Constants ──────────────────────────────────────────── */
